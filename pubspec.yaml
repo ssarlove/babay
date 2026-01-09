@@ -1,0 +1,51 @@
+name: baby_care_app
+description: AI-powered baby emotion detection and care suggestions app
+
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # Camera and permissions
+  camera: ^0.10.5
+  permission_handler: ^11.0.1
+  
+  # ML and AI
+  tflite_flutter: ^0.10.4
+  google_mlkit_face_detection: ^0.11.0
+  
+  # State management
+  provider: ^6.0.5
+  get: ^4.6.6
+  
+  # Local storage
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  
+  # UI components
+  google_fonts: ^6.1.0
+  flutter_svg: ^2.0.7
+  confetti: ^0.7.0
+  
+  # Utilities
+  intl: ^0.18.1
+  uuid: ^4.2.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.1
+  build_runner: ^2.4.6
+  hive_generator: ^2.0.1
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/models/
+    - assets/images/
