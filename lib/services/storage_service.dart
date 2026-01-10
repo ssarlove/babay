@@ -1,11 +1,12 @@
-import 'dart:html' if (dart.library.html) 'dart:io';
+import 'dart:convert' show jsonDecode, jsonEncode;
+import 'dart:html' if (dart.library.io) 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
 import '../models/emotion_result.dart';
 
 class StorageService extends ChangeNotifier {
-  late Box<dynamic> _preferencesBox;
-  late Box<EmotionResult> _historyBox;
+  Box<dynamic>? _preferencesBox;
+  Box<EmotionResult>? _historyBox;
   
   // Web storage compatibility
   static const String _isDarkModeKey = 'is_dark_mode';
@@ -22,8 +23,7 @@ class StorageService extends ChangeNotifier {
     _init();
   }
   
-  Future<void> _init() async {
-    // On web, we use a different initialization approach
+  void _init() {
     if (kIsWeb) {
       _initWeb();
     } else {
@@ -34,10 +34,7 @@ class StorageService extends ChangeNotifier {
     notifyListeners();
   }
   
-  // Web initialization using localStorage
-  Future<void> _initWeb() async {
-    // Initialize with defaults for web
-    // Actual localStorage access happens in getters/setters
+  void _initWeb() {
     notifyListeners();
   }
   
@@ -48,14 +45,14 @@ class StorageService extends ChangeNotifier {
     if (kIsWeb) {
       return _getWebBool(_isDarkModeKey, true);
     }
-    return _preferencesBox.get(_isDarkModeKey, defaultValue: true) as bool;
+    return _preferencesBox?.get(_isDarkModeKey, defaultValue: true) as bool;
   }
   
   set isDarkMode(bool value) {
     if (kIsWeb) {
       _setWebBool(_isDarkModeKey, value);
     } else {
-      _preferencesBox.put(_isDarkModeKey, value);
+      _preferencesBox?.put(_isDarkModeKey, value);
     }
     notifyListeners();
   }
@@ -67,14 +64,14 @@ class StorageService extends ChangeNotifier {
     if (kIsWeb) {
       return _getWebBool(_useNightModeKey, false);
     }
-    return _preferencesBox.get(_useNightModeKey, defaultValue: false) as bool;
+    return _preferencesBox?.get(_useNightModeKey, defaultValue: false) as bool;
   }
   
   set useNightMode(bool value) {
     if (kIsWeb) {
       _setWebBool(_useNightModeKey, value);
     } else {
-      _preferencesBox.put(_useNightModeKey, value);
+      _preferencesBox?.put(_useNightModeKey, value);
     }
     notifyListeners();
   }
@@ -86,14 +83,14 @@ class StorageService extends ChangeNotifier {
     if (kIsWeb) {
       return _getWebBool(_saveHistoryKey, true);
     }
-    return _preferencesBox.get(_saveHistoryKey, defaultValue: true) as bool;
+    return _preferencesBox?.get(_saveHistoryKey, defaultValue: true) as bool;
   }
   
   set saveHistory(bool value) {
     if (kIsWeb) {
       _setWebBool(_saveHistoryKey, value);
     } else {
-      _preferencesBox.put(_saveHistoryKey, value);
+      _preferencesBox?.put(_saveHistoryKey, value);
     }
     notifyListeners();
   }
@@ -105,14 +102,14 @@ class StorageService extends ChangeNotifier {
     if (kIsWeb) {
       return _getWebBool(_showConfidenceKey, true);
     }
-    return _preferencesBox.get(_showConfidenceKey, defaultValue: true) as bool;
+    return _preferencesBox?.get(_showConfidenceKey, defaultValue: true) as bool;
   }
   
   set showConfidence(bool value) {
     if (kIsWeb) {
       _setWebBool(_showConfidenceKey, value);
     } else {
-      _preferencesBox.put(_showConfidenceKey, value);
+      _preferencesBox?.put(_showConfidenceKey, value);
     }
     notifyListeners();
   }
@@ -124,14 +121,14 @@ class StorageService extends ChangeNotifier {
     if (kIsWeb) {
       return _getWebBool(_autoAnalyzeKey, false);
     }
-    return _preferencesBox.get(_autoAnalyzeKey, defaultValue: false) as bool;
+    return _preferencesBox?.get(_autoAnalyzeKey, defaultValue: false) as bool;
   }
   
   set autoAnalyze(bool value) {
     if (kIsWeb) {
       _setWebBool(_autoAnalyzeKey, value);
     } else {
-      _preferencesBox.put(_autoAnalyzeKey, value);
+      _preferencesBox?.put(_autoAnalyzeKey, value);
     }
     notifyListeners();
   }
@@ -143,7 +140,8 @@ class StorageService extends ChangeNotifier {
     if (kIsWeb) {
       return _getWebHistory();
     }
-    return _historyBox.values.toList()..sort((a, b) => b.timestamp.compareTo(a.timestamp));
+    return _historyBox?.values.toList() ?? []
+      ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
   }
   
   Future<void> saveEmotionResult(EmotionResult result) async {
@@ -151,7 +149,7 @@ class StorageService extends ChangeNotifier {
       _saveWebHistory(result);
     } else {
       if (saveHistory) {
-        await _historyBox.add(result);
+        await _historyBox?.add(result);
         notifyListeners();
       }
     }
@@ -161,7 +159,7 @@ class StorageService extends ChangeNotifier {
     if (kIsWeb) {
       _clearWebHistory();
     } else {
-      await _historyBox.clear();
+      await _historyBox?.clear();
     }
     notifyListeners();
   }
@@ -203,8 +201,8 @@ class StorageService extends ChangeNotifier {
       final data = window.localStorage[_webHistoryKey];
       if (data == null) return [];
       
-      final List<dynamic> decoded = List.from(_decodeJson(data));
-      return decoded.map((item) => EmotionResult.fromJson(item)).toList()
+      final List<dynamic> decoded = jsonDecode(data) as List<dynamic>;
+      return decoded.map((item) => EmotionResult.fromJson(item as Map<String, dynamic>)).toList()
         ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
     } catch (e) {
       return [];
@@ -221,7 +219,7 @@ class StorageService extends ChangeNotifier {
         history.removeRange(50, history.length);
       }
       
-      final encoded = _encodeJson(history.map((e) => e.toJson()).toList());
+      final encoded = jsonEncode(history.map((e) => e.toJson()).toList());
       window.localStorage[_webHistoryKey] = encoded;
       notifyListeners();
     } catch (e) {
@@ -236,36 +234,5 @@ class StorageService extends ChangeNotifier {
     } catch (e) {
       // storage error
     }
-  }
-  
-  // =====================================
-  // JSON Helpers (works on web)
-  // =====================================
-  dynamic _decodeJson(String data) {
-    try {
-      // Use JSON decode for web compatibility
-      return _jsonDecode(data);
-    } catch (e) {
-      return [];
-    }
-  }
-  
-  String _encodeJson(dynamic data) {
-    try {
-      return _jsonEncode(data);
-    } catch (e) {
-      return '[]';
-    }
-  }
-  
-  // Workaround for dart:html import in web builds
-  dynamic _jsonDecode(String data) {
-    // This will be replaced by the actual JSON.decode at runtime
-    throw UnimplementedError('Use JSON.decode in your code');
-  }
-  
-  String _jsonEncode(dynamic data) {
-    // This will be replaced by the actual JSON.encode at runtime
-    throw UnimplementedError('Use JSON.encode in your code');
   }
 }
