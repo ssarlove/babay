@@ -1,3 +1,4 @@
+import 'dart:html' if (dart.library.html) 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
 import '../models/emotion_result.dart';
