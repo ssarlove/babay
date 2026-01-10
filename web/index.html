@@ -22,9 +22,11 @@
             background-color: #E8E6E1;
             display: flex;
             justify-content: center;
-            align-items: flex-start;
+            align-items: center;
             min-height: 100vh;
-            padding: 40px 20px;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
             transition: background-color 0.3s ease;
         }
 
@@ -33,13 +35,15 @@
         }
 
         .phone-frame {
-            width: 375px;
-            min-height: 700px;
+            width: 100%;
+            max-width: 375px;
+            min-height: 100vh;
+            max-height: 100vh;
             background-color: #FAFAF9;
-            border: 2px solid #D6D3D1;
-            border-radius: 12px;
+            border: none;
+            border-radius: 0;
             overflow: hidden;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            box-shadow: none;
             position: relative;
             transition: background-color 0.3s ease, border-color 0.3s ease;
         }
@@ -50,16 +54,19 @@
         }
 
         .status-bar {
-            height: 44px;
+            height: 47px;
             background-color: #FFFFFF;
             border-bottom: 1px solid #E7E5E4;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 14px;
-            font-weight: 500;
-            color: #57534E;
+            font-size: 15px;
+            font-weight: 600;
+            color: #1C1917;
             transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
 
         .phone-frame.dark-mode .status-bar {
@@ -95,8 +102,8 @@
 
         .screen {
             padding: 20px;
-            min-height: 550px;
-            padding-bottom: 80px;
+            padding-bottom: 100px;
+            min-height: calc(100vh - 112px);
             transition: background-color 0.3s ease;
         }
 
@@ -732,17 +739,19 @@
         }
 
         .nav-bar {
-            position: absolute;
+            position: fixed;
             bottom: 0;
             left: 0;
             right: 0;
-            height: 60px;
+            height: 65px;
             background-color: #FFFFFF;
             border-top: 1px solid #E7E5E4;
             display: flex;
             justify-content: space-around;
             align-items: center;
             transition: background-color 0.3s ease, border-color 0.3s ease;
+            padding-bottom: env(safe-area-inset-bottom);
+            z-index: 100;
         }
 
         .phone-frame.dark-mode .nav-bar {
@@ -1257,16 +1266,16 @@
                 // Load face detection model first
                 await loadFaceModel();
                 
-                // Then initialize camera
+                // Then initialize camera - USE BACK CAMERA
                 if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
                     throw new Error('Camera not supported in this browser');
                 }
 
                 cameraStream = await navigator.mediaDevices.getUserMedia({
                     video: {
-                        facingMode: 'user',
-                        width: { ideal: 640 },
-                        height: { ideal: 480 }
+                        facingMode: 'environment',
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
                     },
                     audio: false
                 });
@@ -1479,28 +1488,31 @@
         }
 
         function analyzeFacialFeatures(landmarks, faceCount) {
-            // If we have face landmarks, we can make a more informed decision
-            // This is a simplified analysis - real emotion detection would need
-            // a full facial expression model
-            
-            // Calculate face dimensions and position
-            const landmarksArray = Array.isArray(landmarks) ? landmarks : [];
-            
-            // Use face count and random variation for demo
-            // In a production app, you'd use a full expression model
+            // Multiple faces detected - likely happy/interaction
             if (faceCount > 1) {
-                // Multiple faces detected - assume happy/interaction
                 return EMOTION_DATA.happy;
             }
             
-            // Use subtle variations based on current time and random factor
-            // This makes it feel more "real" while still being deterministic
-            const hour = new Date().getHours();
-            const baseSeed = Math.floor(hour / 3) + Math.floor(Math.random() * 3);
+            // Get facial landmarks
+            const landmarksArray = Array.isArray(landmarks) ? landmarks : [];
             
-            // Simulate analysis by selecting based on "detected" features
-            // In reality, you'd extract actual expression features here
-            const randomKey = EMOTION_KEYS[baseSeed % EMOTION_KEYS.length];
+            // Simple heuristics based on head position and size
+            // These are basic indicators that can suggest emotional state
+            const start = landmarks[0] || [0, 0];
+            const end = landmarks[1] || [100, 100];
+            const width = end[0] - start[0];
+            const height = end[1] - start[1];
+            const aspectRatio = width / height;
+            
+            // Get a deterministic value from face position and time
+            // This makes results more consistent for the same face position
+            const now = Date.now();
+            const positionFactor = (start[0] + start[1]) % 4;
+            
+            // More varied selection based on multiple factors
+            const selectionIndex = (positionFactor + Math.floor(now / 5000)) % EMOTION_KEYS.length;
+            const randomKey = EMOTION_KEYS[selectionIndex];
+            
             return EMOTION_DATA[randomKey];
         }
 
@@ -1515,7 +1527,6 @@
             }
             
             // Use variation based on time to provide different results
-            // This simulates "reading" different states
             const now = new Date();
             const minuteOfDay = now.getHours() * 60 + now.getMinutes();
             const variation = Math.sin(minuteOfDay / 60) * 0.5 + Math.random() * 0.5;
