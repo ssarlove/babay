@@ -3,52 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#FFFFFF">
-    <title>BabySense - Know Your Baby</title>
+    <meta name="theme-color" content="#FAFAF9">
+    <title>BabySense App</title>
     
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- TensorFlow.js and Face Detection -->
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface"></script>
+    <!-- MediaPipe Face Mesh for accurate face detection and landmarks -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
     
     <style>
-        :root {
-            /* Simple, warm palette - one accent color */
-            --primary: #0D9488;
-            --primary-light: #5EEAD4;
-            --primary-dark: #0F766E;
-            
-            --bg-light: #FAFAF9;
-            --bg-card: #FFFFFF;
-            --bg-dark: #1C1917;
-            
-            --text-primary: #1C1917;
-            --text-secondary: #57534E;
-            --text-muted: #A8A29E;
-            
-            --border-color: #E7E5E4;
-            --shadow-color: rgba(13, 148, 136, 0.08);
-            
-            --radius-sm: 10px;
-            --radius-md: 14px;
-            --radius-lg: 20px;
-            --radius-xl: 28px;
-        }
-
-        body.dark-mode {
-            --bg-light: #0F172A;
-            --bg-card: #1E293B;
-            --text-primary: #F8FAFC;
-            --text-secondary: #CBD5E1;
-            --text-muted: #64748B;
-            --border-color: #334155;
-            --shadow-color: rgba(13, 148, 136, 0.15);
-        }
-
         * {
             margin: 0;
             padding: 0;
@@ -56,149 +19,175 @@
         }
 
         body {
-            font-family: 'Nunito', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--bg-light);
-            min-height: 100vh;
+            font-family: Georgia, 'Times New Roman', serif;
+            background-color: #E8E6E1;
             display: flex;
             justify-content: center;
             align-items: flex-start;
-            padding: 16px;
-            color: var(--text-primary);
-            transition: background 0.3s ease;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            transition: background-color 0.3s ease;
         }
 
         body.dark-mode {
-            background: #020617;
+            background-color: #1C1917;
         }
 
         .phone-frame {
             width: 100%;
-            max-width: 380px;
-            min-height: 700px;
-            background: var(--bg-card);
-            border-radius: var(--radius-xl);
-            overflow: hidden;
-            box-shadow: 0 4px 30px var(--shadow-color);
+            max-width: 375px;
+            min-height: 100vh;
+            background-color: #FAFAF9;
+            border: none;
+            border-radius: 0;
+            overflow: visible;
+            box-shadow: none;
             position: relative;
-            display: flex;
-            flex-direction: column;
-            transition: background 0.3s ease;
+            transition: background-color 0.3s ease;
         }
 
-        /* Header */
-        .app-header {
-            padding: 20px 24px 16px;
-            background: var(--bg-card);
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            transition: background 0.3s ease;
+        .phone-frame.dark-mode {
+            background-color: #292524;
         }
 
-        .app-logo {
-            width: 44px;
-            height: 44px;
-            background: var(--primary);
-            border-radius: 12px;
+        .status-bar {
+            height: 47px;
+            background-color: #FFFFFF;
+            border-bottom: 1px solid #E7E5E4;
             display: flex;
-            align-items: center;
             justify-content: center;
-            transition: background 0.3s ease;
-        }
-
-        .app-logo svg {
-            width: 26px;
-            height: 26px;
-            color: white;
-        }
-
-        .app-header-text h1 {
-            font-size: 20px;
-            font-weight: 700;
-            color: var(--text-primary);
-            line-height: 1.2;
-            transition: color 0.3s ease;
-        }
-
-        .app-header-text span {
-            font-size: 13px;
-            color: var(--text-muted);
-            font-weight: 500;
-            transition: color 0.3s ease;
-        }
-
-        /* Screen Container */
-        .screen {
-            flex: 1;
-            padding: 0 20px 80px;
-            overflow-y: auto;
-        }
-
-        .home-screen { display: block; }
-        .demo-screen { display: none; }
-        .history-screen { display: none; }
-        .settings-screen { display: none; }
-
-        /* Welcome */
-        .welcome-badge {
-            display: inline-flex;
             align-items: center;
-            gap: 6px;
-            background: var(--bg-light);
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 12px;
+            font-size: 15px;
             font-weight: 600;
-            color: var(--primary);
-            margin-bottom: 14px;
-            border: 1px solid var(--border-color);
-            transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+            color: #1C1917;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .phone-frame.dark-mode .status-bar {
+            background-color: #1C1917;
+            border-color: #44403C;
+            color: #A8A29E;
+        }
+
+        .app-header {
+            padding: 16px 20px;
+            background-color: #FFFFFF;
+            border-bottom: 1px solid #E7E5E4;
+        }
+
+        .phone-frame.dark-mode .app-header {
+            background-color: #1C1917;
+            border-color: #44403C;
+        }
+
+        .app-header h1 {
+            font-family: 'Courier New', monospace;
+            font-size: 18px;
+            font-weight: bold;
+            color: #78716C;
+        }
+
+        .phone-frame.dark-mode .app-header h1 {
+            color: #D6D3D1;
+        }
+
+        .screen {
+            padding: 20px;
+            padding-bottom: 90px;
+            min-height: auto;
+        }
+
+        .phone-frame.dark-mode .screen {
+            background-color: #292524;
+        }
+
+        .home-screen {
+            display: block;
+        }
+
+        .demo-screen {
+            display: none;
+        }
+
+        .history-screen {
+            display: none;
+        }
+
+        .settings-screen {
+            display: none;
+        }
+
+        .welcome-text {
+            margin-bottom: 24px;
         }
 
         .welcome-text h2 {
-            font-size: 24px;
-            font-weight: 700;
-            color: var(--text-primary);
+            font-size: 20px;
+            color: #292524;
             margin-bottom: 8px;
-            line-height: 1.3;
-            transition: color 0.3s ease;
+        }
+
+        .phone-frame.dark-mode .welcome-text h2 {
+            color: #F5F5F4;
         }
 
         .welcome-text p {
-            font-size: 14px;
-            color: var(--text-secondary);
-            line-height: 1.5;
-            margin-bottom: 20px;
-            transition: color 0.3s ease;
+            font-size: 15px;
+            color: #78716C;
+            line-height: 1.6;
         }
 
-        /* Camera */
+        .phone-frame.dark-mode .welcome-text p {
+            color: #A8A29E;
+        }
+
+        /* Camera Container */
         .camera-container {
+            position: relative;
+            width: 100%;
+            background-color: #1C1917;
+            border-radius: 8px;
+            overflow: hidden;
             margin-bottom: 20px;
+        }
+
+        .camera-container.fullscreen {
+            position: fixed;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 100%;
+            height: 100vh;
+            z-index: 1000;
+            border-radius: 0;
+            max-height: 100vh;
         }
 
         .camera-preview {
             width: 100%;
-            height: 240px;
-            background: #0F172A;
-            border-radius: var(--radius-lg);
-            overflow: hidden;
             position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         .camera-preview video {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            transform: scaleX(-1);
-            display: none;
-        }
-
-        .camera-preview.active video {
             display: block;
         }
 
-        .camera-preview canvas {
+        .camera-container.fullscreen .camera-preview video {
+            height: 100vh;
+        }
+
+        /* Face Detection Canvas */
+        #faceCanvas {
             position: absolute;
             top: 0;
             left: 0;
@@ -207,471 +196,460 @@
             pointer-events: none;
         }
 
-        .camera-placeholder {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            padding: 20px;
-        }
-
-        .camera-preview.active .camera-placeholder {
-            display: none;
-        }
-
-        .camera-placeholder svg {
-            width: 48px;
-            height: 48px;
-            color: var(--text-muted);
-            margin-bottom: 12px;
-            transition: color 0.3s ease;
-        }
-
-        .camera-placeholder p {
-            font-size: 13px;
-            color: var(--text-secondary);
-            text-align: center;
-            transition: color 0.3s ease;
-        }
-
+        /* Camera Status Indicator */
         .camera-status {
-            display: none;
             position: absolute;
             top: 10px;
             right: 10px;
             padding: 6px 12px;
-            background: rgba(0, 0, 0, 0.6);
+            background-color: rgba(39, 174, 96, 0.9);
             color: white;
-            border-radius: 16px;
+            border-radius: 20px;
             font-size: 11px;
             font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
             z-index: 20;
-            align-items: center;
-            gap: 5px;
-            backdrop-filter: blur(4px);
         }
 
-        .camera-preview.active .camera-status {
-            display: flex;
+        .camera-status.error {
+            background-color: rgba(231, 76, 60, 0.9);
         }
 
-        .status-dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: #34D399;
+        .camera-status.loading {
+            background-color: rgba(241, 196, 15, 0.9);
         }
 
-        .camera-status.loading .status-dot {
-            background: #FBBF24;
-            animation: pulse 1s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.4; }
-        }
-
+        /* Face Guide */
         .face-guide {
-            display: none;
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 160px;
-            height: 200px;
-            border: 2px dashed rgba(255,255,255,0.4);
-            border-radius: 80px;
+            width: 180px;
+            height: 220px;
+            border: 2px dashed rgba(120, 113, 108, 0.5);
+            border-radius: 90px;
             pointer-events: none;
         }
 
-        .camera-preview.active .face-guide {
+        /* GUI Overlay on Left Side */
+        .gui-overlay {
+            position: absolute;
+            top: 60px;
+            left: 10px;
+            width: 160px;
+            background-color: rgba(250, 250, 249, 0.95);
+            border-radius: 12px;
+            padding: 12px;
+            z-index: 25;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            display: none;
+        }
+
+        .phone-frame.dark-mode .gui-overlay {
+            background-color: rgba(41, 37, 36, 0.95);
+        }
+
+        .gui-overlay.active {
             display: block;
         }
 
-        .scanning-overlay {
-            display: none;
+        .gui-overlay h4 {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #A8A29E;
+            margin-bottom: 8px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .phone-frame.dark-mode .gui-overlay h4 {
+            color: #78716C;
+        }
+
+        .gui-emotion {
+            font-size: 16px;
+            font-weight: bold;
+            color: #292524;
+            margin-bottom: 4px;
+        }
+
+        .phone-frame.dark-mode .gui-emotion {
+            color: #F5F5F4;
+        }
+
+        .gui-confidence {
+            font-size: 11px;
+            color: #78716C;
+            margin-bottom: 10px;
+        }
+
+        .phone-frame.dark-mode .gui-confidence {
+            color: #A8A29E;
+        }
+
+        .gui-suggestions {
+            background-color: #F5F5F4;
+            border-radius: 6px;
+            padding: 8px;
+        }
+
+        .phone-frame.dark-mode .gui-suggestions {
+            background-color: #1C1917;
+        }
+
+        .gui-suggestions h5 {
+            font-size: 9px;
+            text-transform: uppercase;
+            color: #A8A29E;
+            margin-bottom: 6px;
+        }
+
+        .phone-frame.dark-mode .gui-suggestions h5 {
+            color: #78716C;
+        }
+
+        .gui-suggestions ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .gui-suggestions li {
+            font-size: 11px;
+            color: #57534E;
+            padding: 3px 0;
+            border-bottom: 1px solid #E7E5E4;
+        }
+
+        .phone-frame.dark-mode .gui-suggestions li {
+            color: #D6D3D1;
+            border-color: #44403C;
+        }
+
+        .gui-suggestions li:last-child {
+            border-bottom: none;
+        }
+
+        /* Scanning Indicator */
+        .scanning-indicator {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             flex-direction: column;
             align-items: center;
-            gap: 12px;
-            z-index: 15;
+            gap: 16px;
+            z-index: 30;
+            display: none;
         }
 
-        .scanning-overlay.active {
+        .scanning-indicator.active {
             display: flex;
         }
 
         .scanning-ring {
-            width: 50px;
-            height: 50px;
-            border: 3px solid rgba(255,255,255,0.25);
-            border-top-color: var(--primary-light);
+            width: 60px;
+            height: 60px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #78716C;
             border-radius: 50%;
-            animation: spin 0.8s linear infinite;
+            animation: spin 1s linear infinite;
         }
 
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
 
-        .scanning-overlay span {
-            background: rgba(0,0,0,0.7);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 16px;
-            font-size: 12px;
+        .scanning-indicator span {
+            color: #1C1917;
+            font-size: 14px;
             font-weight: 600;
+            text-shadow: 0 1px 3px rgba(255, 255, 255, 0.8);
         }
 
-        /* Scan Button */
-        .scan-btn {
+        /* Placeholder */
+        .camera-placeholder {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #1C1917;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .camera-placeholder svg {
+            width: 48px;
+            height: 48px;
+            color: #A8A29E;
+            margin-bottom: 12px;
+        }
+
+        .camera-placeholder p {
+            font-size: 14px;
+            color: #A8A29E;
+        }
+
+        .camera-container:not(.active) .scanning-indicator,
+        .camera-container:not(.active) .gui-overlay,
+        .camera-container:not(.active) #faceCanvas,
+        .camera-container:not(.active) .face-guide,
+        .camera-container:not(.active) .camera-status {
+            display: none !important;
+        }
+
+        .camera-container.active .camera-placeholder {
+            display: none;
+        }
+
+        .scan-button {
             width: 100%;
             padding: 16px;
-            background: var(--primary);
-            color: white;
+            background-color: #292524;
+            color: #FAFAF9;
             border: none;
-            border-radius: var(--radius-md);
+            border-radius: 6px;
             font-size: 15px;
-            font-weight: 700;
             font-family: inherit;
             cursor: pointer;
-            margin-bottom: 16px;
-            box-shadow: 0 3px 12px rgba(13, 148, 136, 0.25);
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
+            margin-bottom: 24px;
+            transition: opacity 0.2s ease;
         }
 
-        .scan-btn:hover {
-            background: var(--primary-dark);
-            transform: translateY(-1px);
-            box-shadow: 0 5px 16px rgba(13, 148, 136, 0.35);
+        .scan-button:hover {
+            opacity: 0.9;
         }
 
-        .scan-btn:active {
-            transform: translateY(0);
-        }
-
-        .scan-btn:disabled {
-            opacity: 0.6;
+        .scan-button:disabled {
+            opacity: 0.5;
             cursor: not-allowed;
-            transform: none;
         }
 
-        .scan-btn svg {
-            width: 18px;
-            height: 18px;
+        .info-section {
+            background-color: #FFFFFF;
+            border: 1px solid #E7E5E4;
+            border-radius: 8px;
+            padding: 20px;
         }
 
-        /* Info Box */
-        .info-box {
-            background: var(--bg-light);
-            border-radius: var(--radius-md);
+        .phone-frame.dark-mode .info-section {
+            background-color: #1C1917;
+            border-color: #44403C;
+        }
+
+        .info-section h3 {
+            font-size: 15px;
+            color: #44403C;
+            margin-bottom: 12px;
+        }
+
+        .phone-frame.dark-mode .info-section h3 {
+            color: #D6D3D1;
+        }
+
+        .info-section p {
+            font-size: 14px;
+            color: #78716C;
+            line-height: 1.6;
+        }
+
+        .phone-frame.dark-mode .info-section p {
+            color: #A8A29E;
+        }
+
+        .privacy-note {
+            margin-top: 20px;
             padding: 16px;
-            margin-bottom: 16px;
-            border: 1px solid var(--border-color);
-            transition: background 0.3s ease, border-color 0.3s ease;
+            background-color: #F5F5F4;
+            border-radius: 6px;
         }
 
-        .info-box p {
-            font-size: 13px;
-            color: var(--text-secondary);
-            line-height: 1.5;
-            transition: color 0.3s ease;
+        .phone-frame.dark-mode .privacy-note {
+            background-color: #1C1917;
         }
 
-        .privacy-box {
-            display: flex;
-            align-items: flex-start;
-            gap: 10px;
-            padding: 14px;
-            background: var(--bg-light);
-            border-radius: var(--radius-sm);
-            border: 1px solid var(--border-color);
-            transition: background 0.3s ease, border-color 0.3s ease;
-        }
-
-        .privacy-box svg {
-            width: 20px;
-            height: 20px;
-            color: var(--primary);
-            flex-shrink: 0;
-            transition: color 0.3s ease;
-        }
-
-        .privacy-box p {
+        .privacy-note p {
             font-size: 12px;
-            color: var(--text-secondary);
-            line-height: 1.4;
-            transition: color 0.3s ease;
+            color: #78716C;
+            text-align: center;
+        }
+
+        .phone-frame.dark-mode .privacy-note p {
+            color: #A8A29E;
         }
 
         /* Result Card */
         .result-card {
-            background: var(--bg-card);
-            border-radius: var(--radius-lg);
-            padding: 24px;
-            margin-bottom: 16px;
-            box-shadow: 0 4px 20px var(--shadow-color);
-            border: 1px solid var(--border-color);
-            transition: background 0.3s ease, border-color 0.3s ease;
+            background-color: #FFFFFF;
+            border: 1px solid #E7E5E4;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
         }
 
-        .result-emoji {
-            font-size: 56px;
-            text-align: center;
-            margin-bottom: 12px;
+        .phone-frame.dark-mode .result-card {
+            background-color: #1C1917;
+            border-color: #44403C;
         }
 
         .result-card h3 {
-            font-size: 20px;
-            font-weight: 700;
-            color: var(--text-primary);
-            text-align: center;
-            margin-bottom: 6px;
-            transition: color 0.3s ease;
+            font-size: 18px;
+            color: #292524;
+            margin-bottom: 8px;
         }
 
-        .result-card > p {
+        .phone-frame.dark-mode .result-card h3 {
+            color: #F5F5F4;
+        }
+
+        .result-card p {
             font-size: 14px;
-            color: var(--text-secondary);
-            text-align: center;
+            color: #78716C;
             margin-bottom: 16px;
-            line-height: 1.5;
-            transition: color 0.3s ease;
         }
 
-        .result-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            background: var(--bg-light);
-            padding: 5px 10px;
-            border-radius: 10px;
+        .phone-frame.dark-mode .result-card p {
+            color: #A8A29E;
+        }
+
+        .suggestions-list {
+            background-color: #FAFAF9;
+            border-radius: 6px;
+            padding: 16px;
+        }
+
+        .phone-frame.dark-mode .suggestions-list {
+            background-color: #1C1917;
+        }
+
+        .suggestions-list h4 {
             font-size: 11px;
-            font-weight: 600;
-            color: var(--primary);
-            margin-bottom: 14px;
-            border: 1px solid var(--border-color);
-            transition: background 0.3s ease, border-color 0.3s ease;
-        }
-
-        .suggestions-box {
-            background: var(--bg-light);
-            border-radius: var(--radius-sm);
-            padding: 14px;
-            border: 1px solid var(--border-color);
-            transition: background 0.3s ease, border-color 0.3s ease;
-        }
-
-        .suggestions-box h4 {
-            font-size: 10px;
             text-transform: uppercase;
             letter-spacing: 1px;
-            color: var(--text-muted);
-            margin-bottom: 10px;
-            font-weight: 600;
-            transition: color 0.3s ease;
+            color: #A8A29E;
+            margin-bottom: 12px;
         }
 
-        .suggestions-box ul {
+        .suggestions-list ul {
             list-style: none;
         }
 
-        .suggestions-box li {
-            font-size: 13px;
-            color: var(--text-primary);
+        .suggestions-list li {
+            font-size: 14px;
+            color: #57534E;
             padding: 8px 0;
-            border-bottom: 1px solid var(--border-color);
-            transition: color 0.3s ease, border-color 0.3s ease;
+            border-bottom: 1px solid #E7E5E4;
         }
 
-        .suggestions-box li:last-child {
+        .phone-frame.dark-mode .suggestions-list li {
+            color: #D6D3D1;
+            border-color: #44403C;
+        }
+
+        .suggestions-list li:last-child {
             border-bottom: none;
         }
 
-        .suggestions-box li::before {
-            content: '→';
-            color: var(--primary);
-            margin-right: 6px;
-        }
-
-        /* Back Button */
-        .back-btn {
+        .back-button {
             width: 100%;
             padding: 14px;
-            background: transparent;
-            color: var(--text-secondary);
-            border: 2px solid var(--border-color);
-            border-radius: var(--radius-sm);
-            font-size: 14px;
-            font-weight: 600;
+            background-color: transparent;
+            color: #57534E;
+            border: 1px solid #D6D3D1;
+            border-radius: 6px;
+            font-size: 15px;
             font-family: inherit;
             cursor: pointer;
-            margin-bottom: 16px;
-            transition: all 0.2s ease;
+            margin-top: 20px;
         }
 
-        .back-btn:hover {
-            border-color: var(--primary);
-            color: var(--primary);
+        .phone-frame.dark-mode .back-button {
+            color: #A8A29E;
+            border-color: #44403C;
         }
 
-        /* Stats Panel */
-        .stats-panel {
-            display: none;
-            background: #0F172A;
-            border-radius: var(--radius-sm);
-            padding: 14px;
-            margin-bottom: 16px;
-        }
-
-        .stats-panel.show {
-            display: block;
-        }
-
-        .stats-panel h4 {
-            font-size: 11px;
-            color: white;
-            margin-bottom: 10px;
-            font-weight: 600;
-        }
-
-        .stats-row {
-            display: flex;
-            justify-content: space-between;
-            font-size: 11px;
-            color: rgba(255,255,255,0.6);
-            margin-bottom: 5px;
-        }
-
-        .stats-value {
-            color: var(--primary-light);
-            font-weight: 500;
-        }
-
-        /* Disclaimer */
         .disclaimer {
-            font-size: 11px;
-            color: var(--text-muted);
+            font-size: 12px;
+            color: #A8A29E;
             font-style: italic;
-            text-align: center;
-            padding-top: 14px;
-            border-top: 1px solid var(--border-color);
-            transition: color 0.3s ease, border-color 0.3s ease;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid #E7E5E4;
+        }
+
+        .phone-frame.dark-mode .disclaimer {
+            color: #78716C;
+            border-color: #44403C;
         }
 
         /* History */
-        .page-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 6px;
-        }
-
-        .page-header h2 {
-            font-size: 22px;
-            font-weight: 700;
-            color: var(--text-primary);
-            transition: color 0.3s ease;
-        }
-
-        .clear-btn {
-            font-size: 13px;
-            color: var(--primary);
-            font-weight: 600;
-            cursor: pointer;
-            background: none;
-            border: none;
-            transition: color 0.3s ease;
-        }
-
-        .page-desc {
-            font-size: 13px;
-            color: var(--text-secondary);
-            margin-bottom: 20px;
-            transition: color 0.3s ease;
-        }
-
         .history-list {
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 16px;
         }
 
         .history-item {
-            background: var(--bg-card);
-            border-radius: var(--radius-md);
-            padding: 14px 16px;
-            border: 1px solid var(--border-color);
-            transition: transform 0.2s ease, background 0.3s ease, border-color 0.3s ease;
+            background-color: #FFFFFF;
+            border: 1px solid #E7E5E4;
+            border-radius: 8px;
+            padding: 16px;
         }
 
-        .history-item:hover {
-            transform: translateX(3px);
+        .phone-frame.dark-mode .history-item {
+            background-color: #1C1917;
+            border-color: #44403C;
         }
 
-        .history-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        .history-label {
+            font-size: 12px;
+            color: #A8A29E;
+            margin-bottom: 4px;
+            font-family: 'Courier New', monospace;
         }
 
-        .history-emoji {
-            font-size: 24px;
+        .history-value {
+            font-size: 14px;
+            color: #292524;
+            margin-bottom: 12px;
+            font-family: Georgia, serif;
         }
 
-        .history-info {
-            flex: 1;
-            margin-left: 12px;
+        .phone-frame.dark-mode .history-value {
+            color: #F5F5F4;
         }
 
-        .history-emotion {
-            font-size: 15px;
-            font-weight: 600;
-            color: var(--text-primary);
-            transition: color 0.3s ease;
-        }
-
-        .history-time {
-            font-size: 11px;
-            color: var(--text-muted);
-            margin-top: 2px;
-            transition: color 0.3s ease;
+        .history-value:last-of-type {
+            margin-bottom: 0;
         }
 
         .history-empty {
             text-align: center;
-            padding: 50px 16px;
+            padding: 40px 20px;
+            color: #78716C;
         }
 
         .history-empty svg {
-            width: 64px;
-            height: 64px;
-            color: var(--border-color);
-            margin-bottom: 14px;
-            transition: color 0.3s ease;
-        }
-
-        .history-empty h3 {
-            font-size: 16px;
-            font-weight: 600;
-            color: var(--text-primary);
-            margin-bottom: 6px;
-            transition: color 0.3s ease;
+            width: 48px;
+            height: 48px;
+            color: #D6D3D1;
+            margin-bottom: 16px;
         }
 
         .history-empty p {
-            font-size: 13px;
-            color: var(--text-secondary);
-            transition: color 0.3s ease;
+            font-size: 14px;
+            color: #78716C;
+        }
+
+        .phone-frame.dark-mode .history-empty p {
+            color: #A8A29E;
         }
 
         /* Settings */
@@ -679,241 +657,227 @@
             margin-bottom: 24px;
         }
 
-        .section-title {
-            font-size: 10px;
+        .settings-section-title {
+            font-size: 12px;
             text-transform: uppercase;
-            letter-spacing: 1.2px;
-            color: var(--text-muted);
-            margin-bottom: 10px;
-            font-weight: 600;
-            transition: color 0.3s ease;
+            letter-spacing: 1px;
+            color: #A8A29E;
+            margin-bottom: 12px;
+            font-family: 'Courier New', monospace;
         }
 
-        .setting-row {
-            background: var(--bg-card);
-            border-radius: var(--radius-sm);
-            padding: 14px 16px;
-            margin-bottom: 10px;
+        .setting-item {
+            background-color: #FFFFFF;
+            border: 1px solid #E7E5E4;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             cursor: pointer;
-            border: 1px solid var(--border-color);
-            transition: transform 0.2s ease, background 0.3s ease, border-color 0.3s ease;
         }
 
-        .setting-row:hover {
-            transform: translateX(3px);
+        .phone-frame.dark-mode .setting-item {
+            background-color: #1C1917;
+            border-color: #44403C;
         }
 
-        .setting-text {
+        .setting-item:hover {
+            background-color: #F5F5F4;
+        }
+
+        .phone-frame.dark-mode .setting-item:hover {
+            background-color: #1C1917;
+        }
+
+        .setting-info {
             flex: 1;
         }
 
-        .setting-row .label {
+        .setting-label {
             font-size: 14px;
-            font-weight: 600;
-            color: var(--text-primary);
-            margin-bottom: 3px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: color 0.3s ease;
+            color: #292524;
+            margin-bottom: 4px;
         }
 
-        .setting-row .label svg {
-            width: 16px;
-            height: 16px;
-            color: var(--primary);
-            transition: color 0.3s ease;
+        .phone-frame.dark-mode .setting-label {
+            color: #F5F5F4;
         }
 
-        .setting-row .desc {
-            font-size: 11px;
-            color: var(--text-secondary);
-            padding-left: 24px;
-            transition: color 0.3s ease;
+        .setting-description {
+            font-size: 12px;
+            color: #78716C;
         }
 
-        .toggle {
-            width: 46px;
-            height: 24px;
-            background: var(--border-color);
-            border-radius: 12px;
+        .phone-frame.dark-mode .setting-description {
+            color: #A8A29E;
+        }
+
+        .toggle-switch {
+            width: 48px;
+            height: 26px;
+            background-color: #E7E5E4;
+            border-radius: 13px;
             position: relative;
             cursor: pointer;
-            transition: background 0.3s ease;
-            flex-shrink: 0;
         }
 
-        .toggle.active {
-            background: var(--primary);
+        .phone-frame.dark-mode .toggle-switch {
+            background-color: #44403C;
         }
 
-        .toggle::after {
+        .toggle-switch.active {
+            background-color: #78716C;
+        }
+
+        .toggle-switch::after {
             content: '';
             position: absolute;
-            width: 18px;
-            height: 18px;
-            background: white;
+            width: 20px;
+            height: 20px;
+            background-color: #FFFFFF;
             border-radius: 50%;
             top: 3px;
             left: 3px;
             transition: transform 0.3s ease;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
-        .toggle.active::after {
+        .toggle-switch.active::after {
             transform: translateX(22px);
         }
 
-        /* Shape Dropdown */
-        .shape-dropdown {
-            display: none;
-            background: var(--bg-card);
-            border-radius: var(--radius-sm);
-            padding: 10px;
-            margin: 0 0 10px 24px;
-            box-shadow: 0 3px 12px var(--shadow-color);
-            border: 1px solid var(--border-color);
-        }
-
-        .shape-dropdown.show {
-            display: block;
-        }
-
-        .shape-options {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-
-        .shape-option {
-            width: 44px;
-            height: 44px;
-            border: 2px solid var(--border-color);
+        .danger-button {
+            background-color: #FFFFFF;
+            border: 1px solid #E7E5E4;
             border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            padding: 16px;
+            width: 100%;
+            text-align: center;
             cursor: pointer;
-            background: var(--bg-light);
-            transition: all 0.2s ease;
+            font-size: 14px;
+            color: #78716C;
+            font-family: inherit;
         }
 
-        .shape-option:hover {
-            border-color: var(--primary);
+        .phone-frame.dark-mode .danger-button {
+            background-color: #1C1917;
+            border-color: #44403C;
+            color: #A8A29E;
         }
 
-        .shape-option.selected {
-            border-color: var(--primary);
-            background: var(--bg-light);
+        .danger-button:hover {
+            background-color: #FEF2F2;
+            border-color: #FCA5A5;
+            color: #DC2626;
         }
 
-        .shape-option svg {
-            width: 24px;
-            height: 24px;
-            color: var(--text-secondary);
-            transition: color 0.3s ease;
+        .phone-frame.dark-mode .danger-button:hover {
+            background-color: rgba(220, 38, 38, 0.1);
         }
 
-        .shape-option.selected svg {
-            color: var(--primary);
-        }
-
-        /* About */
-        .about-card {
-            background: var(--bg-light);
-            border-radius: var(--radius-lg);
+        .about-section {
+            background-color: #FFFFFF;
+            border: 1px solid #E7E5E4;
+            border-radius: 8px;
             padding: 20px;
             text-align: center;
-            border: 1px solid var(--border-color);
-            transition: background 0.3s ease, border-color 0.3s ease;
+        }
+
+        .phone-frame.dark-mode .about-section {
+            background-color: #1C1917;
+            border-color: #44403C;
         }
 
         .about-logo {
-            width: 56px;
-            height: 56px;
-            background: var(--primary);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 12px;
-            transition: background 0.3s ease;
-        }
-
-        .about-logo svg {
-            width: 32px;
-            height: 32px;
-            color: white;
-        }
-
-        .about-card h3 {
-            font-size: 18px;
-            font-weight: 700;
-            color: var(--text-primary);
-            margin-bottom: 4px;
-            transition: color 0.3s ease;
-        }
-
-        .about-card .version {
-            font-size: 12px;
-            color: var(--text-muted);
+            width: 48px;
+            height: 48px;
+            color: #78716C;
             margin-bottom: 12px;
-            transition: color 0.3s ease;
         }
 
-        .about-card p {
+        .phone-frame.dark-mode .about-logo {
+            color: #D6D3D1;
+        }
+
+        .about-name {
+            font-size: 16px;
+            font-weight: bold;
+            color: #292524;
+            margin-bottom: 4px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .phone-frame.dark-mode .about-name {
+            color: #F5F5F4;
+        }
+
+        .about-version {
             font-size: 12px;
-            color: var(--text-secondary);
-            line-height: 1.5;
-            transition: color 0.3s ease;
+            color: #78716C;
+            margin-bottom: 16px;
         }
 
-        /* Bottom Nav */
+        .phone-frame.dark-mode .about-version {
+            color: #A8A29E;
+        }
+
+        .about-text {
+            font-size: 12px;
+            color: #78716C;
+            line-height: 1.6;
+        }
+
+        .phone-frame.dark-mode .about-text {
+            color: #A8A29E;
+        }
+
+        /* Navigation */
         .nav-bar {
-            position: absolute;
+            position: fixed;
             bottom: 0;
-            left: 0;
-            right: 0;
-            height: 64px;
-            background: var(--bg-card);
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 375px;
+            height: 65px;
+            background-color: #FFFFFF;
+            border-top: 1px solid #E7E5E4;
             display: flex;
             justify-content: space-around;
             align-items: center;
-            padding-bottom: 6px;
-            border-top: 1px solid var(--border-color);
-            transition: background 0.3s ease, border-color 0.3s ease;
+            padding-bottom: env(safe-area-inset-bottom);
+            z-index: 100;
         }
 
-        .nav-btn {
+        .phone-frame.dark-mode .nav-bar {
+            background-color: #1C1917;
+            border-color: #44403C;
+        }
+
+        .nav-item {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 3px;
-            padding: 8px 14px;
+            font-size: 11px;
+            color: #A8A29E;
             cursor: pointer;
-            opacity: 0.5;
-            transition: opacity 0.2s ease;
+            padding: 8px 16px;
         }
 
-        .nav-btn.active {
-            opacity: 1;
+        .nav-item.active {
+            color: #57534E;
         }
 
-        .nav-btn svg {
-            width: 22px;
-            height: 22px;
-            color: var(--primary);
-            transition: color 0.3s ease;
+        .phone-frame.dark-mode .nav-item.active {
+            color: #D6D3D1;
         }
 
-        .nav-btn span {
-            font-size: 10px;
-            font-weight: 600;
-            color: var(--text-primary);
-            transition: color 0.3s ease;
+        .nav-item svg {
+            width: 24px;
+            height: 24px;
+            margin-bottom: 4px;
         }
 
         /* Modal */
@@ -924,12 +888,10 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
+            background-color: rgba(0, 0, 0, 0.5);
             justify-content: center;
             align-items: center;
             z-index: 1000;
-            padding: 20px;
-            backdrop-filter: blur(4px);
         }
 
         .modal-overlay.active {
@@ -937,90 +899,86 @@
         }
 
         .modal {
-            background: var(--bg-card);
-            border-radius: var(--radius-lg);
-            padding: 20px;
-            width: 100%;
-            max-width: 320px;
-            transition: background 0.3s ease;
+            background-color: #FAFAF9;
+            border-radius: 12px;
+            padding: 24px;
+            width: 280px;
+            max-width: 90%;
+        }
+
+        .phone-frame.dark-mode .modal {
+            background-color: #1C1917;
         }
 
         .modal h3 {
-            font-size: 17px;
-            font-weight: 700;
-            color: var(--text-primary);
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: color 0.3s ease;
+            font-size: 16px;
+            color: #292524;
+            margin-bottom: 12px;
+            font-family: 'Courier New', monospace;
         }
 
-        .modal h3 svg {
-            width: 22px;
-            height: 22px;
-            color: var(--primary);
-            transition: color 0.3s ease;
+        .phone-frame.dark-mode .modal h3 {
+            color: #F5F5F4;
         }
 
         .modal p {
-            font-size: 13px;
-            color: var(--text-secondary);
-            margin-bottom: 18px;
+            font-size: 14px;
+            color: #78716C;
+            margin-bottom: 20px;
             line-height: 1.5;
-            transition: color 0.3s ease;
         }
 
-        .modal-btns {
+        .phone-frame.dark-mode .modal p {
+            color: #A8A29E;
+        }
+
+        .modal-buttons {
             display: flex;
-            gap: 10px;
+            gap: 12px;
         }
 
-        .modal-btn {
+        .modal-button {
             flex: 1;
             padding: 12px;
-            border-radius: var(--radius-sm);
-            font-size: 13px;
-            font-weight: 600;
+            border-radius: 6px;
+            font-size: 14px;
             font-family: inherit;
             cursor: pointer;
             border: none;
-            transition: opacity 0.2s ease;
         }
 
-        .modal-btn.cancel {
-            background: var(--bg-light);
-            color: var(--text-secondary);
-            border: 1px solid var(--border-color);
-            transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+        .modal-button.cancel {
+            background-color: #E7E5E4;
+            color: #57534E;
         }
 
-        .modal-btn.confirm {
-            background: var(--primary);
-            color: white;
-            transition: background 0.3s ease;
+        .phone-frame.dark-mode .modal-button.cancel {
+            background-color: #44403C;
+            color: #D6D3D1;
         }
 
-        .modal-btn:hover {
+        .modal-button.confirm {
+            background-color: #292524;
+            color: #FAFAF9;
+        }
+
+        .modal-button:hover {
             opacity: 0.9;
         }
 
-        /* Toast */
         .toast {
             position: fixed;
             bottom: 80px;
             left: 50%;
             transform: translateX(-50%);
-            background: var(--text-primary);
-            color: var(--bg-card);
+            background-color: #292524;
+            color: #FAFAF9;
             padding: 12px 24px;
-            border-radius: var(--radius-md);
-            font-size: 13px;
-            font-weight: 600;
+            border-radius: 8px;
+            font-size: 14px;
             opacity: 0;
             transition: opacity 0.3s ease;
             z-index: 1001;
-            box-shadow: 0 4px 16px var(--shadow-color);
         }
 
         .toast.show {
@@ -1030,545 +988,914 @@
 </head>
 <body>
     <div class="phone-frame" id="phoneFrame">
-        <!-- Header -->
+        <div class="status-bar" id="statusBar">9:41</div>
+
         <div class="app-header">
-            <div class="app-logo">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
-                </svg>
-            </div>
-            <div class="app-header-text">
-                <h1>BabySense</h1>
-                <span>Understand your baby</span>
-            </div>
+            <h1>BabySense</h1>
         </div>
 
-        <!-- Home Screen -->
         <div class="screen home-screen" id="homeScreen">
-            <div class="welcome-badge">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:12px;height:12px">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                Better detection now
-            </div>
-
             <div class="welcome-text">
-                <h2>How's your baby?</h2>
-                <p>Point the camera at their face and we'll take a quick look.</p>
+                <h2>How is your baby doing?</h2>
+                <p>Point the camera at your baby's face. We'll take a quick guess at what they might need.</p>
             </div>
 
-            <div class="camera-container">
-                <div class="camera-preview" id="cameraPreview">
+            <div class="camera-container" id="cameraContainer">
+                <div class="camera-preview">
                     <video id="cameraFeed" autoplay playsinline muted></video>
                     <canvas id="faceCanvas"></canvas>
-                    <div class="camera-status" id="cameraStatus">
-                        <div class="status-dot"></div>
-                        <span>Scanning...</span>
-                    </div>
                     <div class="face-guide"></div>
-                    <div class="camera-placeholder">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                        </svg>
-                        <p id="placeholderText">Camera starts here</p>
+                    <div class="camera-status" id="cameraStatus">Initializing...</div>
+                    <div class="gui-overlay" id="guiOverlay">
+                        <h4>Detected</h4>
+                        <div class="gui-emotion" id="guiEmotion">--</div>
+                        <div class="gui-confidence" id="guiConfidence">--</div>
+                        <div class="gui-suggestions">
+                            <h5>Suggestions</h5>
+                            <ul id="guiSuggestions">
+                                <li>--</li>
+                            </ul>
+                        </div>
                     </div>
-                    <div class="scanning-overlay" id="scanningOverlay">
+                    <div class="scanning-indicator" id="scanningIndicator">
                         <div class="scanning-ring"></div>
                         <span>Analyzing...</span>
                     </div>
+                    <div class="camera-placeholder" id="cameraPlaceholder">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                        </svg>
+                        <p>Loading camera...</p>
+                    </div>
                 </div>
             </div>
 
-            <button class="scan-btn" id="scanButton" onclick="startScan()">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                </svg>
-                Scan Face
-            </button>
+            <button class="scan-button" id="scanButton" onclick="startScan()">Scan Baby's Face</button>
 
-            <div class="info-box">
-                <p>A gentle reminder: this is just a tool to help. Always trust your instincts as a parent!</p>
+            <div class="info-section">
+                <h3>A quick note</h3>
+                <p>This isn't magic. It sometimes gets things wrong. Use your parental instincts. If something seems off, call your pediatrician.</p>
             </div>
 
-            <div class="privacy-box">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-                </svg>
-                <p>Everything stays on your phone. Nothing is sent to any server.</p>
+            <div class="privacy-note">
+                <p>Everything happens on your phone. No data is sent anywhere. We don't see anything.</p>
             </div>
         </div>
 
-        <!-- Result Screen -->
         <div class="screen demo-screen" id="demoScreen">
             <div class="welcome-text">
-                <h2 id="scanTitle">Checking...</h2>
-                <p id="scanStatus">One moment please.</p>
+                <h2 id="scanTitle">Scanning...</h2>
+                <p id="scanStatus">Taking a quick look at your baby's face.</p>
             </div>
 
             <div class="result-card" id="resultCard" style="display: none;">
-                <div class="result-emoji" id="resultEmoji">😊</div>
                 <h3 id="resultTitle">Result here</h3>
                 <p id="resultDesc">Description here</p>
-                <div class="result-badge" id="resultBadge">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:12px;height:12px">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                    <span id="confText">High confidence</span>
-                </div>
-                <div class="suggestions-box">
-                    <h4>Things to try</h4>
-                    <ul id="suggestionsList"></ul>
+                <div class="suggestions-list">
+                    <h4 id="suggestionsTitle">Things to try</h4>
+                    <ul id="suggestionsList">
+                    </ul>
                 </div>
             </div>
 
-            <div class="stats-panel" id="statsPanel">
-                <h4>Technical Details</h4>
-                <div class="stats-row"><span>Position:</span><span class="stats-value" id="statPos">-</span></div>
-                <div class="stats-row"><span>Score:</span><span class="stats-value" id="statScore">-</span></div>
-                <div class="stats-row"><span>Time:</span><span class="stats-value" id="statTime">-</span></div>
-            </div>
+            <button class="back-button" onclick="goBack()">Back to Home</button>
 
-            <button class="back-btn" onclick="goBack()">Back</button>
-            <p class="disclaimer" id="disclaimerText">Done on device</p>
+            <p class="disclaimer" id="disclaimerText">This is a simulation. The real app would use your camera.</p>
         </div>
 
-        <!-- History Screen -->
         <div class="screen history-screen" id="historyScreen">
-            <div class="page-header">
-                <h2>History</h2>
-                <button class="clear-btn" onclick="showClearModal()">Clear</button>
+            <div class="welcome-text">
+                <h2>Scan History</h2>
+                <p>Your recent scans and their results.</p>
             </div>
-            <p class="page-desc">Your recent scans.</p>
-            <div id="historyList" class="history-list"></div>
+            <div id="historyList" class="history-list">
+            </div>
         </div>
 
-        <!-- Settings Screen -->
         <div class="screen settings-screen" id="settingsScreen">
-            <div class="page-header">
+            <div class="welcome-text">
                 <h2>Settings</h2>
+                <p>Customize your experience.</p>
             </div>
-            <p class="page-desc">Customize your experience.</p>
 
             <div class="settings-section">
-                <div class="section-title">Look</div>
-                <div class="setting-row" onclick="toggleSetting('darkMode')">
-                    <div class="setting-text">
-                        <div class="label">
-                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
-                            </svg>
-                            Dark Mode
-                        </div>
-                        <div class="desc">Switch themes</div>
+                <div class="settings-section-title">Camera</div>
+                
+                <div class="setting-item" onclick="toggleSetting('fullscreenCamera')">
+                    <div class="setting-info">
+                        <div class="setting-label">Fullscreen Camera</div>
+                        <div class="setting-description">Expand camera to full screen</div>
                     </div>
-                    <div class="toggle" id="darkModeToggle"></div>
+                    <div class="toggle-switch" id="fullscreenCameraToggle"></div>
                 </div>
             </div>
 
             <div class="settings-section">
-                <div class="section-title">Camera</div>
-                <div class="setting-row" onclick="toggleSetting('styledFrames')">
-                    <div class="setting-text">
-                        <div class="label">
-                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                            </svg>
-                            Frame Shape
-                        </div>
-                        <div class="desc">Fun shapes around baby</div>
+                <div class="settings-section-title">Appearance</div>
+                
+                <div class="setting-item" onclick="toggleSetting('darkMode')">
+                    <div class="setting-info">
+                        <div class="setting-label">Dark Mode</div>
+                        <div class="setting-description">Switch between light and dark themes</div>
                     </div>
-                    <div class="toggle" id="styledFramesToggle"></div>
+                    <div class="toggle-switch" id="darkModeToggle"></div>
                 </div>
-                <div class="shape-dropdown" id="shapeDropdown">
-                    <div class="shape-options">
-                        <div class="shape-option selected" data-shape="circle" onclick="selectShape('circle')">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>
-                        </div>
-                        <div class="shape-option" data-shape="heart" onclick="selectShape('heart')">
-                            <svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
-                        </div>
-                        <div class="shape-option" data-shape="star" onclick="selectShape('star')">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg>
-                        </div>
-                        <div class="shape-option" data-shape="bear" onclick="selectShape('bear')">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="7" cy="14" r="4"/><circle cx="17" cy="14" r="4"/><path d="M4 10c0-3.5 2-5 8-5s8 1.5 8 5"/></svg>
-                        </div>
+            </div>
+
+            <div class="settings-section">
+                <div class="settings-section-title">Notifications</div>
+                
+                <div class="setting-item" onclick="toggleSetting('soundEnabled')">
+                    <div class="setting-info">
+                        <div class="setting-label">Sound Effects</div>
+                        <div class="setting-description">Play chime when scan completes</div>
+                    </div>
+                    <div class="toggle-switch" id="soundEnabledToggle"></div>
+                </div>
+                
+                <div class="setting-item" onclick="toggleSetting('vibrationEnabled')">
+                    <div class="setting-info">
+                        <div class="setting-label">Vibration</div>
+                        <div class="setting-description">Vibrate when scan completes</div>
+                    </div>
+                    <div class="toggle-switch" id="vibrationEnabledToggle"></div>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <div class="settings-section-title">Scanning</div>
+                
+                <div class="setting-item" onclick="toggleSetting('autoSaveHistory')">
+                    <div class="setting-info">
+                        <div class="setting-label">Auto-Save Scans</div>
+                        <div class="setting-description">Automatically save scans to history</div>
+                    </div>
+                    <div class="toggle-switch" id="autoSaveHistoryToggle"></div>
+                </div>
+                
+                <div class="setting-item" onclick="toggleSetting('showConfidence')">
+                    <div class="setting-info">
+                        <div class="setting-label">Show Confidence</div>
+                        <div class="setting-description">Display confidence levels in results</div>
+                    </div>
+                    <div class="toggle-switch" id="showConfidenceToggle"></div>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <div class="settings-section-title">Data</div>
+                
+                <div class="setting-item" onclick="showClearHistoryModal()">
+                    <div class="setting-info">
+                        <div class="setting-label">Clear History</div>
+                        <div class="setting-description">Delete all saved scan history</div>
                     </div>
                 </div>
             </div>
 
             <div class="settings-section">
-                <div class="section-title">Feedback</div>
-                <div class="setting-row" onclick="toggleSetting('soundEnabled')">
-                    <div class="setting-text">
-                        <div class="label">
-                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path>
-                            </svg>
-                            Sound
-                        </div>
-                        <div class="desc">Chime when done</div>
-                    </div>
-                    <div class="toggle" id="soundEnabledToggle"></div>
-                </div>
-                <div class="setting-row" onclick="toggleSetting('vibrationEnabled')">
-                    <div class="setting-text">
-                        <div class="label">
-                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
-                            </svg>
-                            Vibration
-                        </div>
-                        <div class="desc">Haptic feedback</div>
-                    </div>
-                    <div class="toggle" id="vibrationEnabledToggle"></div>
-                </div>
-            </div>
-
-            <div class="settings-section">
-                <div class="section-title">Extras</div>
-                <div class="setting-row" onclick="toggleSetting('statsForNerds')">
-                    <div class="setting-text">
-                        <div class="label">
-                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                            </svg>
-                            Stats for Nerds
-                        </div>
-                        <div class="desc">Show face mesh details</div>
-                    </div>
-                    <div class="toggle" id="statsForNerdsToggle"></div>
-                </div>
-                <div class="setting-row" onclick="toggleSetting('autoSaveHistory')">
-                    <div class="setting-text">
-                        <div class="label">
-                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
-                            </svg>
-                            Save History
-                        </div>
-                        <div class="desc">Remember scans</div>
-                    </div>
-                    <div class="toggle" id="autoSaveHistoryToggle"></div>
-                </div>
-            </div>
-
-            <div class="about-card">
-                <div class="about-logo">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                <div class="settings-section-title">About</div>
+                
+                <div class="about-section">
+                    <svg class="about-logo" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
                     </svg>
+                    <div class="about-name">BabySense</div>
+                    <div class="about-version">Version 1.0.0</div>
+                    <p class="about-text">A simple, privacy-focused tool to help understand your baby's cues. All processing happens on your device. No data leaves your phone.</p>
                 </div>
-                <h3>BabySense</h3>
-                <div class="version">Version 2.0</div>
-                <p>Made for parents. All processing is local - nothing leaves your device.</p>
             </div>
         </div>
 
-        <!-- Bottom Navigation -->
         <div class="nav-bar">
-            <div class="nav-btn active" onclick="switchTab('home', this)">
+            <div class="nav-item active" onclick="switchTab('home', this)">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
                 </svg>
-                <span>Home</span>
+                Home
             </div>
-            <div class="nav-btn" onclick="switchTab('history', this)">
+            <div class="nav-item" onclick="switchTab('history', this)">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
-                <span>History</span>
+                History
             </div>
-            <div class="nav-btn" onclick="switchTab('settings', this)">
+            <div class="nav-item" onclick="switchTab('settings', this)">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                 </svg>
-                <span>Settings</span>
+                Settings
             </div>
         </div>
     </div>
 
-    <!-- Clear Modal -->
-    <div class="modal-overlay" id="clearModal">
+    <div class="modal-overlay" id="clearHistoryModal">
         <div class="modal">
-            <h3>
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                </svg>
-                Clear history?
-            </h3>
-            <p>This will delete all saved scans. This can't be undone.</p>
-            <div class="modal-btns">
-                <button class="modal-btn cancel" onclick="hideClearModal()">Cancel</button>
-                <button class="modal-btn confirm" onclick="clearHistory()">Delete</button>
+            <h3>Clear History</h3>
+            <p>Are you sure you want to delete all scan history? This action cannot be undone.</p>
+            <div class="modal-buttons">
+                <button class="modal-button cancel" onclick="hideClearHistoryModal()">Cancel</button>
+                <button class="modal-button confirm" onclick="clearHistory()">Delete</button>
             </div>
         </div>
     </div>
 
-    <!-- Toast -->
-    <div class="toast" id="toast">Saved</div>
+    <div class="toast" id="toast">Settings saved</div>
 
     <script>
+        // ========================================
+        // Configuration & Data
+        // ========================================
         const EMOTION_DATA = {
-            happy: { emoji: '😊', title: 'Looking happy!', desc: 'Your little one seems content. Great time for some play!', suggestions: ['Play together', 'Tummy time', 'Talk and sing'], confidence: 'High' },
-            fussy: { emoji: '😫', title: 'A bit fussy', desc: 'Your baby might need something. Let\'s figure it out.', suggestions: ['Check diaper', 'Feed if hungry', 'Try cuddling'], confidence: 'Medium' },
-            tired: { emoji: '😴', title: 'Getting tired', desc: 'Your baby might be ready for some rest.', suggestions: ['Wind down', 'Dim lights', 'Try swaddling'], confidence: 'Medium' },
-            calm: { emoji: '😌', title: 'Calm and chill', desc: 'Your baby is just taking it all in. Content and relaxed.', suggestions: ['Talk softly', 'Read a book', 'Just be nearby'], confidence: 'Low' }
+            happy: {
+                emotion: 'Happy',
+                title: 'Seems pretty happy',
+                desc: 'Your baby looks content. Not fussy. Eyes are engaged and relaxed.',
+                suggestions: [
+                    'This is a good time for play',
+                    'Try tummy time if they haven\'t had it',
+                    'Talk and sing to them',
+                    'Maybe introduce a new toy'
+                ],
+                type: 'Positive',
+                confidence: 'High'
+            },
+            fussy: {
+                emotion: 'Fussy',
+                title: 'Looking a bit fussy',
+                desc: 'Your baby might be uncomfortable or needing something.',
+                suggestions: [
+                    'Check the diaper - might need a change',
+                    'Think about when they last ate',
+                    'Try burping if it\'s been a while',
+                    'Sometimes they just need to be held'
+                ],
+                type: 'Negative',
+                confidence: 'Medium'
+            },
+            tired: {
+                emotion: 'Tired',
+                title: 'Showing tired signs',
+                desc: 'Your baby might be ready for some sleep.',
+                suggestions: [
+                    'Start winding down now',
+                    'Dim the lights if you can',
+                    'Try swaddling if age-appropriate',
+                    'White noise can help sometimes'
+                ],
+                type: 'Negative',
+                confidence: 'Medium'
+            },
+            calm: {
+                emotion: 'Calm',
+                title: 'Pretty neutral',
+                desc: 'Your baby is calm and observing. Just taking things in.',
+                suggestions: [
+                    'Talk softly to them',
+                    'They might enjoy looking at a book',
+                    'A change of scenery can be nice',
+                    'Just being nearby is enough'
+                ],
+                type: 'Positive',
+                confidence: 'Low'
+            },
+            crying: {
+                emotion: 'Crying',
+                title: 'Baby is crying',
+                desc: 'Your baby is upset and needs attention.',
+                suggestions: [
+                    'Check if they\'re hungry',
+                    'Check the diaper',
+                    'They might need comfort and cuddles',
+                    'Check for gas or discomfort'
+                ],
+                type: 'Negative',
+                confidence: 'High'
+            }
         };
 
+        const EMOTION_KEYS = Object.keys(EMOTION_DATA);
+
+        // ========================================
+        // State Management
+        // ========================================
         let scanHistory = [];
-        let settings = { darkMode: false, soundEnabled: true, vibrationEnabled: true, autoSaveHistory: true, statsForNerds: false, styledFrames: false, selectedShape: 'circle' };
-        let stickyEmotion = 'calm', emotionStabilityCounter = 0, isScanning = false, cameraInitialized = false, faceModel = null, currentFaceData = null, canvas, ctx;
-
-        const els = {
-            cameraFeed: document.getElementById('cameraFeed'), cameraPreview: document.getElementById('cameraPreview'),
-            cameraStatus: document.getElementById('cameraStatus'), scanningOverlay: document.getElementById('scanningOverlay'),
-            scanButton: document.getElementById('scanButton'), homeScreen: document.getElementById('homeScreen'),
-            demoScreen: document.getElementById('demoScreen'), resultCard: document.getElementById('resultCard'),
-            resultEmoji: document.getElementById('resultEmoji'), resultTitle: document.getElementById('resultTitle'),
-            resultDesc: document.getElementById('resultDesc'), confText: document.getElementById('confText'),
-            suggestionsList: document.getElementById('suggestionsList'), statsPanel: document.getElementById('statsPanel'),
-            disclaimerText: document.getElementById('disclaimerText'), historyList: document.getElementById('historyList'),
-            clearModal: document.getElementById('clearModal'), toast: document.getElementById('toast'),
-            shapeDropdown: document.getElementById('shapeDropdown')
+        let settings = {
+            darkMode: false,
+            soundEnabled: true,
+            vibrationEnabled: true,
+            autoSaveHistory: true,
+            showConfidence: true,
+            fullscreenCamera: false
         };
 
+        let cameraStream = null;
+        let isScanning = false;
+        let cameraInitialized = false;
+        let faceMesh = null;
+        let cameraUtils = null;
+        let currentFaceLandmarks = null;
+        let currentEmotion = null;
+        let isProcessingFrame = false;
+
+        // ========================================
+        // DOM Elements
+        // ========================================
+        const elements = {
+            phoneFrame: document.getElementById('phoneFrame'),
+            statusBar: document.getElementById('statusBar'),
+            cameraFeed: document.getElementById('cameraFeed'),
+            cameraContainer: document.getElementById('cameraContainer'),
+            cameraStatus: document.getElementById('cameraStatus'),
+            cameraPlaceholder: document.getElementById('cameraPlaceholder'),
+            faceCanvas: document.getElementById('faceCanvas'),
+            guiOverlay: document.getElementById('guiOverlay'),
+            guiEmotion: document.getElementById('guiEmotion'),
+            guiConfidence: document.getElementById('guiConfidence'),
+            guiSuggestions: document.getElementById('guiSuggestions'),
+            scanningIndicator: document.getElementById('scanningIndicator'),
+            scanButton: document.getElementById('scanButton'),
+            homeScreen: document.getElementById('homeScreen'),
+            demoScreen: document.getElementById('demoScreen'),
+            scanTitle: document.getElementById('scanTitle'),
+            scanStatus: document.getElementById('scanStatus'),
+            resultCard: document.getElementById('resultCard'),
+            resultTitle: document.getElementById('resultTitle'),
+            resultDesc: document.getElementById('resultDesc'),
+            suggestionsTitle: document.getElementById('suggestionsTitle'),
+            suggestionsList: document.getElementById('suggestionsList'),
+            disclaimerText: document.getElementById('disclaimerText'),
+            historyScreen: document.getElementById('historyScreen'),
+            settingsScreen: document.getElementById('settingsScreen'),
+            historyList: document.getElementById('historyList'),
+            clearHistoryModal: document.getElementById('clearHistoryModal'),
+            toast: document.getElementById('toast')
+        };
+
+        const ctx = elements.faceCanvas.getContext('2d');
+
+        // ========================================
+        // Initialization
+        // ========================================
         document.addEventListener('DOMContentLoaded', () => {
-            canvas = document.getElementById('faceCanvas');
-            ctx = canvas.getContext('2d');
-            loadSettings(); loadHistory(); initCamera();
-            resizeCanvas(); window.addEventListener('resize', resizeCanvas);
+            loadSettings();
+            loadHistory();
+            initFaceMesh();
+            initCamera();
+            updateTime();
+            setInterval(updateTime, 1000);
         });
 
-        function resizeCanvas() {
-            const p = document.getElementById('cameraPreview');
-            if (p && canvas) { canvas.width = p.offsetWidth; canvas.height = p.offsetHeight; }
+        function updateTime() {
+            const now = new Date();
+            const hours = now.getHours();
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            elements.statusBar.textContent = `${hours}:${minutes}`;
         }
 
-        async function initCamera() {
-            updateStatus('loading', 'Loading...');
-            try {
-                await loadFaceModel();
-                if (!navigator.mediaDevices?.getUserMedia) throw new Error('No camera');
-                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } }, audio: false });
-                els.cameraFeed.srcObject = stream;
-                await els.cameraFeed.play();
-                els.cameraPreview.classList.add('active');
-                cameraInitialized = true;
-                updateStatus('success', 'Ready');
-                startFaceDetection();
-            } catch (e) {
-                updateStatus('error', 'Camera unavailable');
-                document.getElementById('placeholderText').textContent = 'Tap Scan to try';
+        // ========================================
+        // MediaPipe Face Mesh
+        // ========================================
+        function initFaceMesh() {
+            faceMesh = new FaceMesh({
+                locateFile: (file) => {
+                    return `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`;
+                }
+            });
+
+            faceMesh.setOptions({
+                maxNumFaces: 1,
+                refineLandmarks: true,
+                minDetectionConfidence: 0.5,
+                minTrackingConfidence: 0.5
+            });
+
+            faceMesh.onResults(onFaceMeshResults);
+
+            // Process frames continuously
+            processVideoFrame();
+        }
+
+        async function processVideoFrame() {
+            if (cameraInitialized && elements.cameraFeed.readyState >= 2) {
+                await faceMesh.send({ image: elements.cameraFeed });
+            }
+            requestAnimationFrame(processVideoFrame);
+        }
+
+        function onFaceMeshResults(results) {
+            const width = elements.faceCanvas.width;
+            const height = elements.faceCanvas.height;
+
+            ctx.clearRect(0, 0, width, height);
+
+            if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
+                const landmarks = results.multiFaceLandmarks[0];
+                currentFaceLandmarks = landmarks;
+
+                // Draw face oval
+                drawFaceContour(landmarks, width, height);
+
+                // Detect emotion from landmarks
+                const detectedEmotion = detectEmotion(landmarks);
+                currentEmotion = detectedEmotion;
+
+                // Update GUI overlay
+                updateGUIOverlay(detectedEmotion);
+
+                elements.cameraContainer.classList.add('active');
+                updateCameraStatus('success', 'Face detected');
+            } else {
+                currentFaceLandmarks = null;
+                currentEmotion = null;
+                elements.guiOverlay.classList.remove('active');
+                elements.cameraContainer.classList.remove('active');
+                updateCameraStatus('success', 'Waiting for face...');
             }
         }
 
-        async function loadFaceModel() {
-            try { faceModel = await blazeface.load(); } catch (e) { console.log('Model loading failed, using simulation'); }
-        }
+        function drawFaceContour(landmarks, width, height) {
+            // Face contour indices
+            const faceContourIndices = [
+                10, 338, 297, 332, 284, 251, 389, 356, 454, 323, 361, 288,
+                397, 365, 379, 378, 400, 377, 152, 148, 176, 150, 171, 340,
+                349, 264, 368, 379, 397, 405, 375, 321, 314, 17, 84, 91, 78,
+                62, 302, 325, 264, 15, 84, 91
+            ];
 
-        async function startFaceDetection() {
-            const detect = async () => {
-                if (!cameraInitialized || isScanning) { if (cameraInitialized) setTimeout(detect, 200); return; }
-                try {
-                    const preds = await faceModel?.estimateFaces(els.cameraFeed, false) || [];
-                    if (ctx && canvas) ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    if (preds.length > 0) {
-                        const f = preds[0], s = f.topLeft, e = f.bottomRight, w = e[0] - s[0], h = e[1] - s[1], cx = s[0] + w / 2, cy = s[1] + h / 2;
-                        currentFaceData = { x: cx, y: cy, w, h, prob: f.probability };
-                        drawOverlay(f);
-                        const ratio = (w * h) / (els.cameraFeed.videoWidth * els.cameraFeed.videoHeight);
-                        updateStatus(ratio < 0.02 ? 'loading' : 'success', ratio < 0.02 ? 'Move closer' : 'Face found');
-                        updateEmotionStability(f);
-                    } else {
-                        currentFaceData = null;
-                        updateStatus('loading', 'Looking...');
-                    }
-                } catch (e) {}
-                setTimeout(detect, 100);
-            };
-            detect();
-        }
-
-        function drawOverlay(face) {
-            if (!ctx || !canvas) return;
-            const scaleX = canvas.width / els.cameraFeed.videoWidth;
-            const scaleY = canvas.height / els.cameraFeed.videoHeight;
-            const s = face.topLeft, e = face.bottomRight, w = e[0] - s[0], h = e[1] - s[1], cx = s[0] + w / 2, cy = s[1] + h / 2;
-            
-            ctx.strokeStyle = settings.statsForNerds ? 'rgba(94, 234, 212, 0.8)' : 'rgba(94, 234, 212, 0.9)';
-            ctx.lineWidth = settings.statsForNerds ? 1.5 : 2.5;
-            const pad = 12, sw = (w + pad * 2) * scaleX, sh = (h + pad * 2) * scaleY;
-            
+            ctx.strokeStyle = '#27ae60';
+            ctx.lineWidth = 3;
             ctx.beginPath();
-            if (settings.statsForNerds) {
-                ctx.strokeRect(s[0] * scaleX, s[1] * scaleY, w * scaleX, h * scaleY);
-                face.landmarks?.forEach(lm => { ctx.fillStyle = 'rgba(94, 234, 212, 0.7)'; ctx.beginPath(); ctx.arc(lm[0] * scaleX, lm[1] * scaleY, 2, 0, Math.PI * 2); ctx.fill(); });
-            } else if (settings.styledFrames) {
-                drawShape(ctx, settings.selectedShape, cx * scaleX, cy * scaleY, sw, sh);
-            }
+
+            faceContourIndices.forEach((index, i) => {
+                const x = landmarks[index].x * width;
+                const y = landmarks[index].y * height;
+
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            });
+
+            ctx.closePath();
             ctx.stroke();
+
+            // Draw eyes
+            drawLandmarkGroup(landmarks, [33, 133, 155, 246], width, height, '#27ae60', 4);
+            drawLandmarkGroup(landmarks, [362, 263, 386, 374], width, height, '#27ae60', 4);
+
+            // Draw nose
+            drawLandmarkGroup(landmarks, [1, 2, 98, 168], width, height, '#27ae60', 4);
+
+            // Draw mouth
+            drawLandmarkGroup(landmarks, [13, 14, 17, 84, 85, 89, 96, 178, 308, 409, 415], width, height, '#27ae60', 4);
         }
 
-        function drawShape(ctx, shape, x, y, w, h) {
-            const s = Math.min(w, h);
-            ctx.beginPath();
-            if (shape === 'circle') ctx.ellipse(x, y, s / 2, s / 2 * 1.1, 0, 0, Math.PI * 2);
-            else if (shape === 'heart') { const th = s * 0.3; ctx.moveTo(x, y + s * 0.15); ctx.bezierCurveTo(x, y - th, x - s, y - th, x - s, y); ctx.bezierCurveTo(x - s, y + th, x, y + s * 0.5, x, y + s * 0.7); ctx.bezierCurveTo(x, y + s * 0.5, x + s, y + th, x + s, y); ctx.bezierCurveTo(x + s, y - th, x, y - th, x, y + s * 0.15); }
-            else if (shape === 'star') { const or = s * 0.45, ir = s * 0.22; let rot = -Math.PI / 2; for (let i = 0; i < 5; i++) { ctx.lineTo(x + Math.cos(rot) * or, y + Math.sin(rot) * or); rot += Math.PI / 5; ctx.lineTo(x + Math.cos(rot) * ir, y + Math.sin(rot) * ir); rot += Math.PI / 5; } }
-            else if (shape === 'bear') { const er = s * 0.22, hr = s * 0.4; ctx.arc(x - hr * 0.75, y - hr * 0.6, er, 0, Math.PI * 2); ctx.moveTo(x - hr * 0.75, y - hr * 0.6); ctx.arc(x + hr * 0.75, y - hr * 0.6, er, 0, Math.PI * 2); ctx.moveTo(x + hr * 0.75, y - hr * 0.6); ctx.arc(x, y, hr, 0, Math.PI * 2); }
+        function drawLandmarkGroup(landmarks, indices, width, height, color, size) {
+            ctx.fillStyle = color;
+            indices.forEach(index => {
+                const x = landmarks[index].x * width;
+                const y = landmarks[index].y * height;
+                ctx.beginPath();
+                ctx.arc(x, y, size, 0, Math.PI * 2);
+                ctx.fill();
+            });
         }
 
-        function updateStatus(type, msg) {
-            els.cameraStatus.querySelector('span').textContent = msg;
-            els.cameraStatus.className = 'camera-status ' + type;
+        function detectEmotion(landmarks) {
+            // Key landmark indices
+            // Eyes: 33 (left outer), 133 (left inner), 362 (right inner), 263 (right outer)
+            // Mouth: 13 (upper lip), 14 (lower lip), 17 (right corner), 84 (left corner)
+            // Eyebrows: 105 (left inner), 107 (left outer), 276 (right outer), 282 (right inner)
+
+            // Calculate mouth openness
+            const upperLip = landmarks[13];
+            const lowerLip = landmarks[14];
+            const mouthOpen = Math.abs(lowerLip.y - upperLip.y);
+
+            // Calculate mouth corners
+            const leftCorner = landmarks[61];
+            const rightCorner = landmarks[291];
+            const mouthWidth = Math.abs(rightCorner.x - leftCorner.x);
+            const leftCornerY = leftCorner.y;
+            const rightCornerY = rightCorner.y;
+            
+            // Calculate smile (mouth corners up or down)
+            const mouthCornersDiff = (leftCornerY + rightCornerY) / 2 - upperLip.y;
+
+            // Calculate eye openness
+            const leftEyeOpen = Math.abs(landmarks[159].y - landmarks[145].y);
+            const rightEyeOpen = Math.abs(landmarks[386].y - landmarks[374].y);
+            const eyeOpenness = (leftEyeOpen + rightEyeOpen) / 2;
+
+            // Calculate eyebrow position
+            const leftBrow = landmarks[105];
+            const rightBrow = landmarks[276];
+            const browHeight = (landmarks[293].y + landmarks[300].y) / 2;
+            const browRaise = browHeight - (leftBrow.y + rightBrow.y) / 2;
+
+            // Calculate cheek fullness (emotion indicator)
+            const leftCheek = landmarks[187];
+            const rightCheek = landmarks[411];
+
+            // Decision logic for emotions
+            // Crying: mouth wide open, eyes may be squinted or wide
+            if (mouthOpen > 0.08 && mouthCornersDiff > 0.02) {
+                return { ...EMOTION_DATA.crying, confidence: 'High' };
+            }
+
+            // Tired: eyes partially closed, mouth relatively neutral
+            if (eyeOpenness < 0.02 && mouthOpen < 0.04) {
+                return { ...EMOTION_DATA.tired, confidence: 'Medium' };
+            }
+
+            // Happy: mouth corners up (smile), eyes engaged
+            if (mouthCornersDiff > 0.01 && eyeOpenness > 0.02) {
+                return { ...EMOTION_DATA.happy, confidence: 'Medium' };
+            }
+
+            // Fussy: eyebrows raised or mouth slightly open, not happy
+            if (browRaise > 0.01 || (mouthOpen > 0.03 && mouthOpen < 0.07)) {
+                return { ...EMOTION_DATA.fussy, confidence: 'Medium' };
+            }
+
+            // Default: calm/neutral
+            return { ...EMOTION_DATA.calm, confidence: 'Low' };
         }
 
-        function updateEmotionStability(face) {
-            const cur = calculateEmotion(face);
-            if (cur === stickyEmotion) emotionStabilityCounter++;
-            else emotionStabilityCounter = 0;
-            if (emotionStabilityCounter >= 8) stickyEmotion = cur;
+        function updateGUIOverlay(emotion) {
+            if (!emotion) {
+                elements.guiOverlay.classList.remove('active');
+                return;
+            }
+
+            elements.guiOverlay.classList.add('active');
+            elements.guiEmotion.textContent = emotion.emotion;
+            elements.guiConfidence.textContent = `Confidence: ${emotion.confidence}`;
+
+            // Update suggestions
+            const suggestionsHTML = emotion.suggestions.slice(0, 3).map(s => `<li>${s}</li>`).join('');
+            elements.guiSuggestions.innerHTML = suggestionsHTML || '<li>--</li>';
         }
 
-        function calculateEmotion(face) {
-            const s = face.topLeft, e = face.bottomRight, h = e[1] - s[1], w = e[0] - s[0], ratio = h / w;
-            const timeVar = Math.sin(Date.now() / 6000);
-            if (ratio < 1.05 && timeVar > 0) return 'happy';
-            if (ratio > 1.2 || timeVar < -0.6) return 'tired';
-            return Math.random() > 0.65 ? 'fussy' : 'calm';
+        // ========================================
+        // Camera Functions
+        // ========================================
+        async function initCamera() {
+            try {
+                updateCameraStatus('loading', 'Loading AI model...');
+
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    throw new Error('Camera not supported in this browser');
+                }
+
+                // Use back camera
+                cameraStream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: 'environment',
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    },
+                    audio: false
+                });
+
+                elements.cameraFeed.srcObject = cameraStream;
+                await elements.cameraFeed.play();
+
+                // Set canvas size
+                elements.faceCanvas.width = elements.cameraFeed.videoWidth;
+                elements.faceCanvas.height = elements.cameraFeed.videoHeight;
+
+                cameraInitialized = true;
+                elements.cameraContainer.classList.add('active');
+                updateCameraStatus('success', 'Camera ready');
+
+            } catch (error) {
+                console.log('Camera access error:', error);
+                let errorMessage = 'Camera unavailable';
+                if (error.name === 'NotAllowedError') {
+                    errorMessage = 'Camera permission denied';
+                } else if (error.name === 'NotFoundError') {
+                    errorMessage = 'No camera found';
+                }
+                updateCameraStatus('error', errorMessage);
+                elements.cameraPlaceholder.querySelector('p').textContent = `${errorMessage}. Refresh to try again.`;
+            }
+        }
+
+        function updateCameraStatus(type, message) {
+            elements.cameraStatus.textContent = message;
+            elements.cameraStatus.className = 'camera-status';
+            if (type === 'error') {
+                elements.cameraStatus.classList.add('error');
+            } else if (type === 'loading') {
+                elements.cameraStatus.classList.add('loading');
+            } else if (type === 'success') {
+                elements.cameraStatus.classList.add('success');
+            }
         }
 
         function startScan() {
             if (isScanning) return;
-            isScanning = true; els.scanButton.disabled = true;
-            els.homeScreen.style.display = 'none'; els.demoScreen.style.display = 'block';
-            els.resultCard.style.display = 'none'; els.statsPanel.classList.remove('show');
-            document.getElementById('scanTitle').textContent = 'Checking...';
-            document.getElementById('scanStatus').textContent = 'One moment please.';
-            if (settings.soundEnabled) playSound();
-            els.scanningOverlay.classList.add('active');
+            isScanning = true;
+            elements.scanButton.disabled = true;
+
+            const homeScreen = document.getElementById('homeScreen');
+            const demoScreen = document.getElementById('demoScreen');
+
+            homeScreen.style.display = 'none';
+            demoScreen.style.display = 'block';
+            elements.resultCard.style.display = 'none';
+            elements.scanTitle.textContent = 'Analyzing...';
+            elements.scanStatus.textContent = 'Examining your baby\'s face...';
+            elements.disclaimerText.style.display = 'none';
+
+            // Show scanning indicator
+            elements.scanningIndicator.classList.add('active');
+
+            // Perform analysis
             performAnalysis();
         }
 
-        async function performAnalysis() {
-            const start = Date.now();
-            let result;
-            if (faceModel && cameraInitialized && currentFaceData) {
-                try {
-                    const preds = await faceModel.estimateFaces(els.cameraFeed, false);
-                    result = preds.length > 0 ? EMOTION_DATA[stickyEmotion] : EMOTION_DATA.calm;
-                    if (settings.statsForNerds) { els.statsPanel.classList.add('show'); document.getElementById('statPos').textContent = `${Math.round(currentFaceData.x)},${Math.round(currentFaceData.y)}`; document.getElementById('statScore').textContent = `${(currentFaceData.prob * 100).toFixed(1)}%`; document.getElementById('statTime').textContent = `${Date.now() - start}ms`; }
-                } catch (e) { result = EMOTION_DATA[stickyEmotion]; }
-            } else { result = EMOTION_DATA[stickyEmotion]; }
-            els.scanningOverlay.classList.remove('active');
-            displayResult(result);
+        function performAnalysis() {
+            // Check if face was detected
+            if (currentEmotion && currentFaceLandmarks) {
+                // Real analysis from face detection
+                setTimeout(() => {
+                    elements.scanningIndicator.classList.remove('active');
+                    displayResult(currentEmotion);
+                }, 1500);
+            } else {
+                // No face detected
+                setTimeout(() => {
+                    elements.scanningIndicator.classList.remove('active');
+                    elements.scanTitle.textContent = 'No Face Detected';
+                    elements.scanStatus.textContent = 'Please make sure your baby\'s face is visible in the camera.';
+                    elements.disclaimerText.textContent = 'Position your baby\'s face within the guide and try again.';
+                    elements.disclaimerText.style.display = 'block';
+                    isScanning = false;
+                    elements.scanButton.disabled = false;
+                }, 1500);
+            }
         }
 
-        function displayResult(data) {
-            els.resultEmoji.textContent = data.emoji;
-            document.getElementById('resultTitle').textContent = data.title;
-            document.getElementById('resultDesc').textContent = data.desc;
-            document.getElementById('confText').textContent = data.confidence + ' confidence';
-            els.suggestionsList.innerHTML = data.suggestions.map(s => `<li>${s}</li>`).join('');
-            if (settings.autoSaveHistory) saveToHistory(data);
-            if (settings.vibrationEnabled && navigator.vibrate) navigator.vibrate([80, 40, 80]);
-            els.resultCard.style.display = 'block';
-            els.disclaimerText.style.display = 'block';
-            isScanning = false; els.scanButton.disabled = false;
+        function displayResult(state) {
+            // Play sound and vibration
+            if (settings.soundEnabled) {
+                playChimeSound();
+            }
+            if (settings.vibrationEnabled && navigator.vibrate) {
+                navigator.vibrate([200, 100, 200]);
+            }
+
+            elements.scanTitle.textContent = 'Here\'s what we noticed:';
+            elements.scanStatus.textContent = '';
+            elements.resultTitle.textContent = state.title;
+            elements.resultDesc.textContent = state.desc;
+
+            elements.suggestionsTitle.textContent = state.type === 'Negative' ? 'Things to try' : 'Suggestions';
+
+            const list = elements.suggestionsList;
+            list.innerHTML = '';
+            state.suggestions.forEach(item => {
+                const li = document.createElement('li');
+                li.textContent = item;
+                list.appendChild(li);
+            });
+
+            if (settings.autoSaveHistory) {
+                saveToHistory(state);
+            }
+
+            elements.resultCard.style.display = 'block';
+            elements.disclaimerText.style.display = 'block';
+            elements.disclaimerText.textContent = 'Face analysis complete - detection ran on your device';
+
+            isScanning = false;
+            elements.scanButton.disabled = false;
         }
 
-        function playSound() {
+        function playChimeSound() {
             try {
-                const ctx = new (window.AudioContext || window.webkitAudioContext)();
-                [523.25, 659.25, 783.99].forEach((freq, i) => {
-                    const osc = ctx.createOscillator(), gain = ctx.createGain();
-                    osc.connect(gain); gain.connect(ctx.destination);
-                    osc.frequency.value = freq; osc.type = 'sine';
-                    const t = ctx.currentTime + i * 0.08;
-                    gain.gain.setValueAtTime(0.08, t); gain.gain.exponentialRampToValueAtTime(0.01, t + 0.25);
-                    osc.start(t); osc.stop(t + 0.25);
-                });
-            } catch (e) {}
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                
+                // Create a pleasant chime sound
+                const playNote = (freq, time, duration) => {
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    oscillator.frequency.value = freq;
+                    oscillator.type = 'sine';
+                    
+                    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime + time);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + time + duration);
+                    
+                    oscillator.start(audioContext.currentTime + time);
+                    oscillator.stop(audioContext.currentTime + time + duration);
+                };
+
+                // Play a cheerful chime
+                playNote(523.25, 0, 0.3);     // C5
+                playNote(659.25, 0.15, 0.3);  // E5
+                playNote(783.99, 0.3, 0.4);   // G5
+                
+            } catch (error) {
+                console.log('Audio not supported');
+            }
         }
 
         function goBack() {
-            els.homeScreen.style.display = 'block'; els.demoScreen.style.display = 'none';
-            els.statsPanel.classList.remove('show');
+            const homeScreen = document.getElementById('homeScreen');
+            const demoScreen = document.getElementById('demoScreen');
+
+            homeScreen.style.display = 'block';
+            demoScreen.style.display = 'none';
         }
 
-        function saveToHistory(data) {
-            const entry = { time: new Date(), emoji: data.emoji, emotion: data.title, conf: data.confidence };
-            scanHistory.unshift(entry);
-            if (scanHistory.length > 25) scanHistory.pop();
+        // ========================================
+        // History Functions
+        // ========================================
+        function saveToHistory(state) {
+            const historyEntry = {
+                timestamp: new Date(),
+                emotionType: state.type,
+                emotion: state.emotion,
+                confidence: state.confidence
+            };
+            scanHistory.unshift(historyEntry);
+            if (scanHistory.length > 20) {
+                scanHistory.pop();
+            }
             localStorage.setItem('babySenseHistory', JSON.stringify(scanHistory));
         }
 
         function loadHistory() {
-            const h = localStorage.getItem('babySenseHistory');
-            if (h) scanHistory = JSON.parse(h);
+            const savedHistory = localStorage.getItem('babySenseHistory');
+            if (savedHistory) {
+                scanHistory = JSON.parse(savedHistory);
+            }
         }
 
         function renderHistory() {
-            if (!scanHistory.length) {
-                els.historyList.innerHTML = '<div class="history-empty"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><h3>No scans yet</h3><p>Start scanning from Home</p></div>';
+            if (scanHistory.length === 0) {
+                elements.historyList.innerHTML = `
+                    <div class="history-empty">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <p>No scans yet. Go to Home and tap "Scan Baby's Face" to get started.</p>
+                    </div>
+                `;
                 return;
             }
-            els.historyList.innerHTML = scanHistory.slice(0, 15).map(e => {
-                const d = new Date(e.time), t = d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
-                return `<div class="history-item"><div class="history-row"><span class="history-emoji">${e.emoji}</span><div class="history-info"><div class="history-emotion">${e.emotion}</div><div class="history-time">${t}</div></div></div></div>`;
-            }).join('');
+
+            elements.historyList.innerHTML = '';
+            scanHistory.forEach((entry) => {
+                const date = new Date(entry.timestamp);
+                const dateStr = date.toLocaleDateString();
+                const time = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                
+                let html = `
+                    <div class="history-item">
+                        <div class="history-label">Date</div>
+                        <div class="history-value">${dateStr} at ${time}</div>
+                        <div class="history-label">Emotion type</div>
+                        <div class="history-value">${entry.emotionType}</div>
+                        <div class="history-label">Emotion</div>
+                        <div class="history-value">${entry.emotion}</div>
+                `;
+                
+                if (settings.showConfidence) {
+                    html += `
+                        <div class="history-label">Confidence level</div>
+                        <div class="history-value">${entry.confidence}</div>
+                    `;
+                }
+                
+                html += `</div>`;
+                elements.historyList.innerHTML += html;
+            });
         }
 
+        function clearHistory() {
+            scanHistory = [];
+            localStorage.setItem('babySenseHistory', JSON.stringify(scanHistory));
+            hideClearHistoryModal();
+            showToast('History cleared');
+        }
+
+        // ========================================
+        // Settings Functions
+        // ========================================
         function loadSettings() {
-            const s = localStorage.getItem('babySenseSettings');
-            if (s) settings = { ...settings, ...JSON.parse(s) };
+            const savedSettings = localStorage.getItem('babySenseSettings');
+            if (savedSettings) {
+                settings = { ...settings, ...JSON.parse(savedSettings) };
+            }
             applySettings();
         }
 
         function saveSettings() {
             localStorage.setItem('babySenseSettings', JSON.stringify(settings));
             applySettings();
-            showToast('Saved');
         }
 
         function applySettings() {
-            document.body.classList.toggle('dark-mode', settings.darkMode);
-            document.querySelectorAll('.toggle').forEach(t => t.classList.toggle('active', settings[t.id.replace('Toggle', '')]));
-            els.shapeDropdown.classList.toggle('show', settings.styledFrames);
-            document.querySelectorAll('.shape-option').forEach(o => o.classList.toggle('selected', o.dataset.shape === settings.selectedShape));
+            // Dark mode
+            if (settings.darkMode) {
+                elements.phoneFrame.classList.add('dark-mode');
+                document.body.classList.add('dark-mode');
+            } else {
+                elements.phoneFrame.classList.remove('dark-mode');
+                document.body.classList.remove('dark-mode');
+            }
+
+            // Fullscreen camera
+            if (settings.fullscreenCamera) {
+                elements.cameraContainer.classList.add('fullscreen');
+            } else {
+                elements.cameraContainer.classList.remove('fullscreen');
+            }
+
+            // Update toggles
+            document.getElementById('darkModeToggle').classList.toggle('active', settings.darkMode);
+            document.getElementById('soundEnabledToggle').classList.toggle('active', settings.soundEnabled);
+            document.getElementById('vibrationEnabledToggle').classList.toggle('active', settings.vibrationEnabled);
+            document.getElementById('autoSaveHistoryToggle').classList.toggle('active', settings.autoSaveHistory);
+            document.getElementById('showConfidenceToggle').classList.toggle('active', settings.showConfidence);
+            document.getElementById('fullscreenCameraToggle').classList.toggle('active', settings.fullscreenCamera);
         }
 
-        function toggleSetting(key) {
-            if (key === 'styledFrames') { settings.styledFrames = !settings.styledFrames; if (!settings.styledFrames) settings.selectedShape = 'circle'; }
-            else if (key === 'statsForNerds') settings.statsForNerds = !settings.statsForNerds;
-            else settings[key] = !settings[key];
+        function toggleSetting(setting) {
+            settings[setting] = !settings[setting];
             saveSettings();
+            showToast(`${setting === 'darkMode' ? 'Dark mode' : setting === 'soundEnabled' ? 'Sound' : setting === 'vibrationEnabled' ? 'Vibration' : setting === 'autoSaveHistory' ? 'Auto-save' : setting === 'showConfidence' ? 'Confidence' : 'Fullscreen'} ${settings[setting] ? 'enabled' : 'disabled'}`);
         }
 
-        function selectShape(shape) {
-            settings.selectedShape = shape;
-            document.querySelectorAll('.shape-option').forEach(o => o.classList.toggle('selected', o.dataset.shape === shape));
-            saveSettings();
+        // ========================================
+        // Navigation Functions
+        // ========================================
+        function switchTab(tab, element) {
+            const homeScreen = document.getElementById('homeScreen');
+            const demoScreen = document.getElementById('demoScreen');
+            const historyScreen = document.getElementById('historyScreen');
+            const settingsScreen = document.getElementById('settingsScreen');
+            const navItems = document.querySelectorAll('.nav-item');
+
+            navItems.forEach(item => item.classList.remove('active'));
+
+            if (tab === 'home') {
+                homeScreen.style.display = 'block';
+                demoScreen.style.display = 'none';
+                historyScreen.style.display = 'none';
+                settingsScreen.style.display = 'none';
+                navItems[0].classList.add('active');
+            } else if (tab === 'history') {
+                homeScreen.style.display = 'none';
+                demoScreen.style.display = 'none';
+                historyScreen.style.display = 'block';
+                settingsScreen.style.display = 'none';
+                navItems[1].classList.add('active');
+                renderHistory();
+            } else if (tab === 'settings') {
+                homeScreen.style.display = 'none';
+                demoScreen.style.display = 'none';
+                historyScreen.style.display = 'none';
+                settingsScreen.style.display = 'block';
+                navItems[2].classList.add('active');
+            }
         }
 
-        function switchTab(tab, btn) {
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            document.getElementById('homeScreen').style.display = tab === 'home' ? 'block' : 'none';
-            document.getElementById('demoScreen').style.display = tab === 'demo' ? 'block' : 'none';
-            document.getElementById('historyScreen').style.display = tab === 'history' ? 'block' : 'none';
-            document.getElementById('settingsScreen').style.display = tab === 'settings' ? 'block' : 'none';
-            if (tab === 'history') renderHistory();
+        // ========================================
+        // Modal Functions
+        // ========================================
+        function showClearHistoryModal() {
+            elements.clearHistoryModal.classList.add('active');
         }
 
-        function showClearModal() { els.clearModal.classList.add('active'); }
-        function hideClearModal() { els.clearModal.classList.remove('active'); }
-        function clearHistory() { scanHistory = []; localStorage.removeItem('babySenseHistory'); hideClearModal(); showToast('Cleared'); renderHistory(); }
-        function showToast(msg) { els.toast.textContent = msg; els.toast.classList.add('show'); setTimeout(() => els.toast.classList.remove('show'), 1800); }
-        els.clearModal.addEventListener('click', e => { if (e.target === els.clearModal) hideClearModal(); });
+        function hideClearHistoryModal() {
+            elements.clearHistoryModal.classList.remove('active');
+        }
+
+        function showToast(message) {
+            elements.toast.textContent = message;
+            elements.toast.classList.add('show');
+            setTimeout(() => {
+                elements.toast.classList.remove('show');
+            }, 2000);
+        }
+
+        // Close modal when clicking outside
+        elements.clearHistoryModal.addEventListener('click', (e) => {
+            if (e.target === elements.clearHistoryModal) {
+                hideClearHistoryModal();
+            }
+        });
     </script>
 </body>
 </html>
