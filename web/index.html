@@ -2,15 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#FAFAF9">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BabySense App</title>
-    
-    <!-- MediaPipe Face Mesh for accurate face detection and landmarks -->
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
-    
     <style>
         * {
             margin: 0;
@@ -25,8 +18,7 @@
             justify-content: center;
             align-items: flex-start;
             min-height: 100vh;
-            margin: 0;
-            padding: 0;
+            padding: 40px 20px;
             transition: background-color 0.3s ease;
         }
 
@@ -35,35 +27,33 @@
         }
 
         .phone-frame {
-            width: 100%;
-            max-width: 375px;
-            min-height: 100vh;
+            width: 375px;
+            min-height: 700px;
             background-color: #FAFAF9;
-            border: none;
-            border-radius: 0;
-            overflow: visible;
-            box-shadow: none;
+            border: 2px solid #D6D3D1;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
             position: relative;
-            transition: background-color 0.3s ease;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
         }
 
         .phone-frame.dark-mode {
             background-color: #292524;
+            border-color: #44403C;
         }
 
         .status-bar {
-            height: 47px;
+            height: 44px;
             background-color: #FFFFFF;
             border-bottom: 1px solid #E7E5E4;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 15px;
-            font-weight: 600;
-            color: #1C1917;
-            position: sticky;
-            top: 0;
-            z-index: 100;
+            font-size: 14px;
+            font-weight: 500;
+            color: #57534E;
+            transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
         }
 
         .phone-frame.dark-mode .status-bar {
@@ -76,6 +66,7 @@
             padding: 16px 20px;
             background-color: #FFFFFF;
             border-bottom: 1px solid #E7E5E4;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
         }
 
         .phone-frame.dark-mode .app-header {
@@ -88,6 +79,8 @@
             font-size: 18px;
             font-weight: bold;
             color: #78716C;
+            letter-spacing: -0.5px;
+            transition: color 0.3s ease;
         }
 
         .phone-frame.dark-mode .app-header h1 {
@@ -96,8 +89,9 @@
 
         .screen {
             padding: 20px;
-            padding-bottom: 90px;
-            min-height: auto;
+            min-height: 550px;
+            padding-bottom: 80px;
+            transition: background-color 0.3s ease;
         }
 
         .phone-frame.dark-mode .screen {
@@ -128,6 +122,7 @@
             font-size: 20px;
             color: #292524;
             margin-bottom: 8px;
+            transition: color 0.3s ease;
         }
 
         .phone-frame.dark-mode .welcome-text h2 {
@@ -138,275 +133,50 @@
             font-size: 15px;
             color: #78716C;
             line-height: 1.6;
+            transition: color 0.3s ease;
         }
 
         .phone-frame.dark-mode .welcome-text p {
             color: #A8A29E;
         }
 
-        /* Camera Container */
-        .camera-container {
-            position: relative;
-            width: 100%;
-            background-color: #1C1917;
-            border-radius: 8px;
-            overflow: hidden;
-            margin-bottom: 20px;
-        }
-
-        .camera-container.fullscreen {
-            position: fixed;
-            top: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 100%;
-            max-width: 100%;
-            height: 100vh;
-            z-index: 1000;
-            border-radius: 0;
-            max-height: 100vh;
-        }
-
         .camera-preview {
             width: 100%;
-            position: relative;
+            height: 280px;
+            background-color: #E7E5E4;
+            border: 1px solid #D6D3D1;
+            border-radius: 8px;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
+            margin-bottom: 20px;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
         }
 
-        .camera-preview video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
-        }
-
-        .camera-container.fullscreen .camera-preview video {
-            height: 100vh;
-        }
-
-        /* Face Detection Canvas */
-        #faceCanvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-        }
-
-        /* Camera Status Indicator */
-        .camera-status {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            padding: 6px 12px;
-            background-color: rgba(39, 174, 96, 0.9);
-            color: white;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            z-index: 20;
-        }
-
-        .camera-status.error {
-            background-color: rgba(231, 76, 60, 0.9);
-        }
-
-        .camera-status.loading {
-            background-color: rgba(241, 196, 15, 0.9);
-        }
-
-        /* Face Guide */
-        .face-guide {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 180px;
-            height: 220px;
-            border: 2px dashed rgba(120, 113, 108, 0.5);
-            border-radius: 90px;
-            pointer-events: none;
-        }
-
-        /* GUI Overlay on Left Side */
-        .gui-overlay {
-            position: absolute;
-            top: 60px;
-            left: 10px;
-            width: 160px;
-            background-color: rgba(250, 250, 249, 0.95);
-            border-radius: 12px;
-            padding: 12px;
-            z-index: 25;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            display: none;
-        }
-
-        .phone-frame.dark-mode .gui-overlay {
-            background-color: rgba(41, 37, 36, 0.95);
-        }
-
-        .gui-overlay.active {
-            display: block;
-        }
-
-        .gui-overlay h4 {
-            font-size: 10px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: #A8A29E;
-            margin-bottom: 8px;
-            font-family: 'Courier New', monospace;
-        }
-
-        .phone-frame.dark-mode .gui-overlay h4 {
-            color: #78716C;
-        }
-
-        .gui-emotion {
-            font-size: 16px;
-            font-weight: bold;
-            color: #292524;
-            margin-bottom: 4px;
-        }
-
-        .phone-frame.dark-mode .gui-emotion {
-            color: #F5F5F4;
-        }
-
-        .gui-confidence {
-            font-size: 11px;
-            color: #78716C;
-            margin-bottom: 10px;
-        }
-
-        .phone-frame.dark-mode .gui-confidence {
-            color: #A8A29E;
-        }
-
-        .gui-suggestions {
-            background-color: #F5F5F4;
-            border-radius: 6px;
-            padding: 8px;
-        }
-
-        .phone-frame.dark-mode .gui-suggestions {
+        .phone-frame.dark-mode .camera-preview {
             background-color: #1C1917;
-        }
-
-        .gui-suggestions h5 {
-            font-size: 9px;
-            text-transform: uppercase;
-            color: #A8A29E;
-            margin-bottom: 6px;
-        }
-
-        .phone-frame.dark-mode .gui-suggestions h5 {
-            color: #78716C;
-        }
-
-        .gui-suggestions ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        .gui-suggestions li {
-            font-size: 11px;
-            color: #57534E;
-            padding: 3px 0;
-            border-bottom: 1px solid #E7E5E4;
-        }
-
-        .phone-frame.dark-mode .gui-suggestions li {
-            color: #D6D3D1;
             border-color: #44403C;
         }
 
-        .gui-suggestions li:last-child {
-            border-bottom: none;
-        }
-
-        /* Scanning Indicator */
-        .scanning-indicator {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            flex-direction: column;
-            align-items: center;
-            gap: 16px;
-            z-index: 30;
-            display: none;
-        }
-
-        .scanning-indicator.active {
-            display: flex;
-        }
-
-        .scanning-ring {
-            width: 60px;
-            height: 60px;
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-top-color: #78716C;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .scanning-indicator span {
-            color: #1C1917;
-            font-size: 14px;
-            font-weight: 600;
-            text-shadow: 0 1px 3px rgba(255, 255, 255, 0.8);
-        }
-
-        /* Placeholder */
-        .camera-placeholder {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: #1C1917;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-            text-align: center;
-        }
-
-        .camera-placeholder svg {
+        .camera-preview svg {
             width: 48px;
             height: 48px;
             color: #A8A29E;
             margin-bottom: 12px;
+            transition: color 0.3s ease;
         }
 
-        .camera-placeholder p {
+        .camera-preview p {
             font-size: 14px;
+            color: #78716C;
+            text-align: center;
+            padding: 0 20px;
+            transition: color 0.3s ease;
+        }
+
+        .phone-frame.dark-mode .camera-preview p {
             color: #A8A29E;
-        }
-
-        .camera-container:not(.active) .scanning-indicator,
-        .camera-container:not(.active) .gui-overlay,
-        .camera-container:not(.active) #faceCanvas,
-        .camera-container:not(.active) .face-guide,
-        .camera-container:not(.active) .camera-status {
-            display: none !important;
-        }
-
-        .camera-container.active .camera-placeholder {
-            display: none;
         }
 
         .scan-button {
@@ -420,16 +190,11 @@
             font-family: inherit;
             cursor: pointer;
             margin-bottom: 24px;
-            transition: opacity 0.2s ease;
+            transition: opacity 0.2s ease, background-color 0.3s ease;
         }
 
         .scan-button:hover {
             opacity: 0.9;
-        }
-
-        .scan-button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
         }
 
         .info-section {
@@ -437,6 +202,7 @@
             border: 1px solid #E7E5E4;
             border-radius: 8px;
             padding: 20px;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
         }
 
         .phone-frame.dark-mode .info-section {
@@ -448,6 +214,7 @@
             font-size: 15px;
             color: #44403C;
             margin-bottom: 12px;
+            transition: color 0.3s ease;
         }
 
         .phone-frame.dark-mode .info-section h3 {
@@ -458,40 +225,20 @@
             font-size: 14px;
             color: #78716C;
             line-height: 1.6;
+            transition: color 0.3s ease;
         }
 
         .phone-frame.dark-mode .info-section p {
             color: #A8A29E;
         }
 
-        .privacy-note {
-            margin-top: 20px;
-            padding: 16px;
-            background-color: #F5F5F4;
-            border-radius: 6px;
-        }
-
-        .phone-frame.dark-mode .privacy-note {
-            background-color: #1C1917;
-        }
-
-        .privacy-note p {
-            font-size: 12px;
-            color: #78716C;
-            text-align: center;
-        }
-
-        .phone-frame.dark-mode .privacy-note p {
-            color: #A8A29E;
-        }
-
-        /* Result Card */
         .result-card {
             background-color: #FFFFFF;
             border: 1px solid #E7E5E4;
             border-radius: 8px;
             padding: 20px;
             margin-bottom: 20px;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
         }
 
         .phone-frame.dark-mode .result-card {
@@ -503,6 +250,7 @@
             font-size: 18px;
             color: #292524;
             margin-bottom: 8px;
+            transition: color 0.3s ease;
         }
 
         .phone-frame.dark-mode .result-card h3 {
@@ -513,6 +261,7 @@
             font-size: 14px;
             color: #78716C;
             margin-bottom: 16px;
+            transition: color 0.3s ease;
         }
 
         .phone-frame.dark-mode .result-card p {
@@ -523,6 +272,7 @@
             background-color: #FAFAF9;
             border-radius: 6px;
             padding: 16px;
+            transition: background-color 0.3s ease;
         }
 
         .phone-frame.dark-mode .suggestions-list {
@@ -535,6 +285,7 @@
             letter-spacing: 1px;
             color: #A8A29E;
             margin-bottom: 12px;
+            transition: color 0.3s ease;
         }
 
         .suggestions-list ul {
@@ -546,6 +297,7 @@
             color: #57534E;
             padding: 8px 0;
             border-bottom: 1px solid #E7E5E4;
+            transition: color 0.3s ease, border-color 0.3s ease;
         }
 
         .phone-frame.dark-mode .suggestions-list li {
@@ -568,6 +320,15 @@
             font-family: inherit;
             cursor: pointer;
             margin-top: 20px;
+            transition: background-color 0.2s ease, border-color 0.3s ease, color 0.3s ease;
+        }
+
+        .back-button:hover {
+            background-color: #FAFAF9;
+        }
+
+        .phone-frame.dark-mode .back-button:hover {
+            background-color: #1C1917;
         }
 
         .phone-frame.dark-mode .back-button {
@@ -575,21 +336,6 @@
             border-color: #44403C;
         }
 
-        .disclaimer {
-            font-size: 12px;
-            color: #A8A29E;
-            font-style: italic;
-            margin-top: 16px;
-            padding-top: 16px;
-            border-top: 1px solid #E7E5E4;
-        }
-
-        .phone-frame.dark-mode .disclaimer {
-            color: #78716C;
-            border-color: #44403C;
-        }
-
-        /* History */
         .history-list {
             display: flex;
             flex-direction: column;
@@ -601,6 +347,7 @@
             border: 1px solid #E7E5E4;
             border-radius: 8px;
             padding: 16px;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
         }
 
         .phone-frame.dark-mode .history-item {
@@ -613,6 +360,7 @@
             color: #A8A29E;
             margin-bottom: 4px;
             font-family: 'Courier New', monospace;
+            transition: color 0.3s ease;
         }
 
         .history-value {
@@ -620,6 +368,7 @@
             color: #292524;
             margin-bottom: 12px;
             font-family: Georgia, serif;
+            transition: color 0.3s ease;
         }
 
         .phone-frame.dark-mode .history-value {
@@ -641,18 +390,19 @@
             height: 48px;
             color: #D6D3D1;
             margin-bottom: 16px;
+            transition: color 0.3s ease;
         }
 
         .history-empty p {
             font-size: 14px;
             color: #78716C;
+            transition: color 0.3s ease;
         }
 
         .phone-frame.dark-mode .history-empty p {
             color: #A8A29E;
         }
 
-        /* Settings */
         .settings-section {
             margin-bottom: 24px;
         }
@@ -676,6 +426,7 @@
             justify-content: space-between;
             align-items: center;
             cursor: pointer;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
         }
 
         .phone-frame.dark-mode .setting-item {
@@ -699,6 +450,7 @@
             font-size: 14px;
             color: #292524;
             margin-bottom: 4px;
+            transition: color 0.3s ease;
         }
 
         .phone-frame.dark-mode .setting-label {
@@ -708,6 +460,7 @@
         .setting-description {
             font-size: 12px;
             color: #78716C;
+            transition: color 0.3s ease;
         }
 
         .phone-frame.dark-mode .setting-description {
@@ -721,6 +474,7 @@
             border-radius: 13px;
             position: relative;
             cursor: pointer;
+            transition: background-color 0.3s ease;
         }
 
         .phone-frame.dark-mode .toggle-switch {
@@ -759,6 +513,7 @@
             font-size: 14px;
             color: #78716C;
             font-family: inherit;
+            transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
         }
 
         .phone-frame.dark-mode .danger-button {
@@ -783,6 +538,7 @@
             border-radius: 8px;
             padding: 20px;
             text-align: center;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
         }
 
         .phone-frame.dark-mode .about-section {
@@ -795,6 +551,7 @@
             height: 48px;
             color: #78716C;
             margin-bottom: 12px;
+            transition: color 0.3s ease;
         }
 
         .phone-frame.dark-mode .about-logo {
@@ -807,6 +564,7 @@
             color: #292524;
             margin-bottom: 4px;
             font-family: 'Courier New', monospace;
+            transition: color 0.3s ease;
         }
 
         .phone-frame.dark-mode .about-name {
@@ -817,6 +575,7 @@
             font-size: 12px;
             color: #78716C;
             margin-bottom: 16px;
+            transition: color 0.3s ease;
         }
 
         .phone-frame.dark-mode .about-version {
@@ -827,28 +586,25 @@
             font-size: 12px;
             color: #78716C;
             line-height: 1.6;
+            transition: color 0.3s ease;
         }
 
         .phone-frame.dark-mode .about-text {
             color: #A8A29E;
         }
 
-        /* Navigation */
         .nav-bar {
-            position: fixed;
+            position: absolute;
             bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 100%;
-            max-width: 375px;
-            height: 65px;
+            left: 0;
+            right: 0;
+            height: 60px;
             background-color: #FFFFFF;
             border-top: 1px solid #E7E5E4;
             display: flex;
             justify-content: space-around;
             align-items: center;
-            padding-bottom: env(safe-area-inset-bottom);
-            z-index: 100;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
         }
 
         .phone-frame.dark-mode .nav-bar {
@@ -864,6 +620,7 @@
             color: #A8A29E;
             cursor: pointer;
             padding: 8px 16px;
+            transition: color 0.3s ease;
         }
 
         .nav-item.active {
@@ -880,7 +637,44 @@
             margin-bottom: 4px;
         }
 
-        /* Modal */
+        .privacy-note {
+            margin-top: 20px;
+            padding: 16px;
+            background-color: #F5F5F4;
+            border-radius: 6px;
+            transition: background-color 0.3s ease;
+        }
+
+        .phone-frame.dark-mode .privacy-note {
+            background-color: #1C1917;
+        }
+
+        .privacy-note p {
+            font-size: 12px;
+            color: #78716C;
+            text-align: center;
+            transition: color 0.3s ease;
+        }
+
+        .phone-frame.dark-mode .privacy-note p {
+            color: #A8A29E;
+        }
+
+        .disclaimer {
+            font-size: 12px;
+            color: #A8A29E;
+            font-style: italic;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid #E7E5E4;
+            transition: color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .phone-frame.dark-mode .disclaimer {
+            color: #78716C;
+            border-color: #44403C;
+        }
+
         .modal-overlay {
             display: none;
             position: fixed;
@@ -904,6 +698,7 @@
             padding: 24px;
             width: 280px;
             max-width: 90%;
+            transition: background-color 0.3s ease;
         }
 
         .phone-frame.dark-mode .modal {
@@ -915,6 +710,7 @@
             color: #292524;
             margin-bottom: 12px;
             font-family: 'Courier New', monospace;
+            transition: color 0.3s ease;
         }
 
         .phone-frame.dark-mode .modal h3 {
@@ -926,6 +722,7 @@
             color: #78716C;
             margin-bottom: 20px;
             line-height: 1.5;
+            transition: color 0.3s ease;
         }
 
         .phone-frame.dark-mode .modal p {
@@ -945,6 +742,7 @@
             font-family: inherit;
             cursor: pointer;
             border: none;
+            transition: opacity 0.2s ease;
         }
 
         .modal-button.cancel {
@@ -988,7 +786,7 @@
 </head>
 <body>
     <div class="phone-frame" id="phoneFrame">
-        <div class="status-bar" id="statusBar">9:41</div>
+        <div class="status-bar">9:41</div>
 
         <div class="app-header">
             <h1>BabySense</h1>
@@ -1000,37 +798,14 @@
                 <p>Point the camera at your baby's face. We'll take a quick guess at what they might need.</p>
             </div>
 
-            <div class="camera-container" id="cameraContainer">
-                <div class="camera-preview">
-                    <video id="cameraFeed" autoplay playsinline muted></video>
-                    <canvas id="faceCanvas"></canvas>
-                    <div class="face-guide"></div>
-                    <div class="camera-status" id="cameraStatus">Initializing...</div>
-                    <div class="gui-overlay" id="guiOverlay">
-                        <h4>Detected</h4>
-                        <div class="gui-emotion" id="guiEmotion">--</div>
-                        <div class="gui-confidence" id="guiConfidence">--</div>
-                        <div class="gui-suggestions">
-                            <h5>Suggestions</h5>
-                            <ul id="guiSuggestions">
-                                <li>--</li>
-                            </ul>
-                        </div>
-                    </div>
-                    <div class="scanning-indicator" id="scanningIndicator">
-                        <div class="scanning-ring"></div>
-                        <span>Analyzing...</span>
-                    </div>
-                    <div class="camera-placeholder" id="cameraPlaceholder">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                        </svg>
-                        <p>Loading camera...</p>
-                    </div>
-                </div>
+            <div class="camera-preview">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                </svg>
+                <p>Camera preview will appear here when you tap scan</p>
             </div>
 
-            <button class="scan-button" id="scanButton" onclick="startScan()">Scan Baby's Face</button>
+            <button class="scan-button" onclick="startScan()">Scan Baby's Face</button>
 
             <div class="info-section">
                 <h3>A quick note</h3>
@@ -1044,7 +819,7 @@
 
         <div class="screen demo-screen" id="demoScreen">
             <div class="welcome-text">
-                <h2 id="scanTitle">Scanning...</h2>
+                <h2>Scanning...</h2>
                 <p id="scanStatus">Taking a quick look at your baby's face.</p>
             </div>
 
@@ -1052,7 +827,7 @@
                 <h3 id="resultTitle">Result here</h3>
                 <p id="resultDesc">Description here</p>
                 <div class="suggestions-list">
-                    <h4 id="suggestionsTitle">Things to try</h4>
+                    <h4>Things to try</h4>
                     <ul id="suggestionsList">
                     </ul>
                 </div>
@@ -1060,7 +835,7 @@
 
             <button class="back-button" onclick="goBack()">Back to Home</button>
 
-            <p class="disclaimer" id="disclaimerText">This is a simulation. The real app would use your camera.</p>
+            <p class="disclaimer">This is a simulation. The real app would use your camera.</p>
         </div>
 
         <div class="screen history-screen" id="historyScreen">
@@ -1076,18 +851,6 @@
             <div class="welcome-text">
                 <h2>Settings</h2>
                 <p>Customize your experience.</p>
-            </div>
-
-            <div class="settings-section">
-                <div class="settings-section-title">Camera</div>
-                
-                <div class="setting-item" onclick="toggleSetting('fullscreenCamera')">
-                    <div class="setting-info">
-                        <div class="setting-label">Fullscreen Camera</div>
-                        <div class="setting-description">Expand camera to full screen</div>
-                    </div>
-                    <div class="toggle-switch" id="fullscreenCameraToggle"></div>
-                </div>
             </div>
 
             <div class="settings-section">
@@ -1108,7 +871,7 @@
                 <div class="setting-item" onclick="toggleSetting('soundEnabled')">
                     <div class="setting-info">
                         <div class="setting-label">Sound Effects</div>
-                        <div class="setting-description">Play chime when scan completes</div>
+                        <div class="setting-description">Play sounds during scan</div>
                     </div>
                     <div class="toggle-switch" id="soundEnabledToggle"></div>
                 </div>
@@ -1204,14 +967,11 @@
     <div class="toast" id="toast">Settings saved</div>
 
     <script>
-        // ========================================
-        // Configuration & Data
-        // ========================================
-        const EMOTION_DATA = {
-            happy: {
+        const states = [
+            {
                 emotion: 'Happy',
                 title: 'Seems pretty happy',
-                desc: 'Your baby looks content. Not fussy. Eyes are engaged and relaxed.',
+                desc: 'Your baby looks content. Not fussy. Eyes are engaged.',
                 suggestions: [
                     'This is a good time for play',
                     'Try tummy time if they haven\'t had it',
@@ -1221,7 +981,7 @@
                 type: 'Positive',
                 confidence: 'High'
             },
-            fussy: {
+            {
                 emotion: 'Fussy',
                 title: 'Looking a bit fussy',
                 desc: 'Your baby might be uncomfortable or needing something.',
@@ -1231,10 +991,11 @@
                     'Try burping if it\'s been a while',
                     'Sometimes they just need to be held'
                 ],
+                fixes: 'Check diaper, feeding, or try burping',
                 type: 'Negative',
                 confidence: 'Medium'
             },
-            tired: {
+            {
                 emotion: 'Tired',
                 title: 'Showing tired signs',
                 desc: 'Your baby might be ready for some sleep.',
@@ -1244,10 +1005,11 @@
                     'Try swaddling if age-appropriate',
                     'White noise can help sometimes'
                 ],
+                fixes: 'Start bedtime routine, dim lights, try swaddling',
                 type: 'Negative',
                 confidence: 'Medium'
             },
-            calm: {
+            {
                 emotion: 'Calm',
                 title: 'Pretty neutral',
                 desc: 'Your baby is calm and observing. Just taking things in.',
@@ -1259,454 +1021,129 @@
                 ],
                 type: 'Positive',
                 confidence: 'Low'
-            },
-            crying: {
-                emotion: 'Crying',
-                title: 'Baby is crying',
-                desc: 'Your baby is upset and needs attention.',
-                suggestions: [
-                    'Check if they\'re hungry',
-                    'Check the diaper',
-                    'They might need comfort and cuddles',
-                    'Check for gas or discomfort'
-                ],
-                type: 'Negative',
-                confidence: 'High'
             }
-        };
+        ];
 
-        const EMOTION_KEYS = Object.keys(EMOTION_DATA);
-
-        // ========================================
-        // State Management
-        // ========================================
         let scanHistory = [];
-        let settings = {
+        
+        const defaultSettings = {
             darkMode: false,
             soundEnabled: true,
             vibrationEnabled: true,
             autoSaveHistory: true,
-            showConfidence: true,
-            fullscreenCamera: false
+            showConfidence: true
         };
 
-        let cameraStream = null;
-        let isScanning = false;
-        let cameraInitialized = false;
-        let faceMesh = null;
-        let cameraUtils = null;
-        let currentFaceLandmarks = null;
-        let currentEmotion = null;
-        let isProcessingFrame = false;
+        let settings = { ...defaultSettings };
 
-        // ========================================
-        // DOM Elements
-        // ========================================
-        const elements = {
-            phoneFrame: document.getElementById('phoneFrame'),
-            statusBar: document.getElementById('statusBar'),
-            cameraFeed: document.getElementById('cameraFeed'),
-            cameraContainer: document.getElementById('cameraContainer'),
-            cameraStatus: document.getElementById('cameraStatus'),
-            cameraPlaceholder: document.getElementById('cameraPlaceholder'),
-            faceCanvas: document.getElementById('faceCanvas'),
-            guiOverlay: document.getElementById('guiOverlay'),
-            guiEmotion: document.getElementById('guiEmotion'),
-            guiConfidence: document.getElementById('guiConfidence'),
-            guiSuggestions: document.getElementById('guiSuggestions'),
-            scanningIndicator: document.getElementById('scanningIndicator'),
-            scanButton: document.getElementById('scanButton'),
-            homeScreen: document.getElementById('homeScreen'),
-            demoScreen: document.getElementById('demoScreen'),
-            scanTitle: document.getElementById('scanTitle'),
-            scanStatus: document.getElementById('scanStatus'),
-            resultCard: document.getElementById('resultCard'),
-            resultTitle: document.getElementById('resultTitle'),
-            resultDesc: document.getElementById('resultDesc'),
-            suggestionsTitle: document.getElementById('suggestionsTitle'),
-            suggestionsList: document.getElementById('suggestionsList'),
-            disclaimerText: document.getElementById('disclaimerText'),
-            historyScreen: document.getElementById('historyScreen'),
-            settingsScreen: document.getElementById('settingsScreen'),
-            historyList: document.getElementById('historyList'),
-            clearHistoryModal: document.getElementById('clearHistoryModal'),
-            toast: document.getElementById('toast')
-        };
-
-        const ctx = elements.faceCanvas.getContext('2d');
-
-        // ========================================
-        // Initialization
-        // ========================================
-        document.addEventListener('DOMContentLoaded', () => {
-            loadSettings();
-            loadHistory();
-            initFaceMesh();
-            initCamera();
-            updateTime();
-            setInterval(updateTime, 1000);
-        });
-
-        function updateTime() {
-            const now = new Date();
-            const hours = now.getHours();
-            const minutes = now.getMinutes().toString().padStart(2, '0');
-            elements.statusBar.textContent = `${hours}:${minutes}`;
-        }
-
-        // ========================================
-        // MediaPipe Face Mesh
-        // ========================================
-        function initFaceMesh() {
-            faceMesh = new FaceMesh({
-                locateFile: (file) => {
-                    return `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`;
-                }
-            });
-
-            faceMesh.setOptions({
-                maxNumFaces: 1,
-                refineLandmarks: true,
-                minDetectionConfidence: 0.5,
-                minTrackingConfidence: 0.5
-            });
-
-            faceMesh.onResults(onFaceMeshResults);
-
-            // Process frames continuously
-            processVideoFrame();
-        }
-
-        async function processVideoFrame() {
-            if (cameraInitialized && elements.cameraFeed.readyState >= 2) {
-                await faceMesh.send({ image: elements.cameraFeed });
+        function loadSettings() {
+            const savedSettings = localStorage.getItem('babySenseSettings');
+            if (savedSettings) {
+                settings = JSON.parse(savedSettings);
             }
-            requestAnimationFrame(processVideoFrame);
+            applySettings();
         }
 
-        function onFaceMeshResults(results) {
-            const width = elements.faceCanvas.width;
-            const height = elements.faceCanvas.height;
-
-            ctx.clearRect(0, 0, width, height);
-
-            if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
-                const landmarks = results.multiFaceLandmarks[0];
-                currentFaceLandmarks = landmarks;
-
-                // Draw face oval
-                drawFaceContour(landmarks, width, height);
-
-                // Detect emotion from landmarks
-                const detectedEmotion = detectEmotion(landmarks);
-                currentEmotion = detectedEmotion;
-
-                // Update GUI overlay
-                updateGUIOverlay(detectedEmotion);
-
-                elements.cameraContainer.classList.add('active');
-                updateCameraStatus('success', 'Face detected');
-            } else {
-                currentFaceLandmarks = null;
-                currentEmotion = null;
-                elements.guiOverlay.classList.remove('active');
-                elements.cameraContainer.classList.remove('active');
-                updateCameraStatus('success', 'Waiting for face...');
-            }
+        function saveSettings() {
+            localStorage.setItem('babySenseSettings', JSON.stringify(settings));
+            applySettings();
+            showToast('Settings saved');
         }
 
-        function drawFaceContour(landmarks, width, height) {
-            // Face contour indices
-            const faceContourIndices = [
-                10, 338, 297, 332, 284, 251, 389, 356, 454, 323, 361, 288,
-                397, 365, 379, 378, 400, 377, 152, 148, 176, 150, 171, 340,
-                349, 264, 368, 379, 397, 405, 375, 321, 314, 17, 84, 91, 78,
-                62, 302, 325, 264, 15, 84, 91
-            ];
-
-            ctx.strokeStyle = '#27ae60';
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-
-            faceContourIndices.forEach((index, i) => {
-                const x = landmarks[index].x * width;
-                const y = landmarks[index].y * height;
-
-                if (i === 0) {
-                    ctx.moveTo(x, y);
-                } else {
-                    ctx.lineTo(x, y);
-                }
-            });
-
-            ctx.closePath();
-            ctx.stroke();
-
-            // Draw eyes
-            drawLandmarkGroup(landmarks, [33, 133, 155, 246], width, height, '#27ae60', 4);
-            drawLandmarkGroup(landmarks, [362, 263, 386, 374], width, height, '#27ae60', 4);
-
-            // Draw nose
-            drawLandmarkGroup(landmarks, [1, 2, 98, 168], width, height, '#27ae60', 4);
-
-            // Draw mouth
-            drawLandmarkGroup(landmarks, [13, 14, 17, 84, 85, 89, 96, 178, 308, 409, 415], width, height, '#27ae60', 4);
-        }
-
-        function drawLandmarkGroup(landmarks, indices, width, height, color, size) {
-            ctx.fillStyle = color;
-            indices.forEach(index => {
-                const x = landmarks[index].x * width;
-                const y = landmarks[index].y * height;
-                ctx.beginPath();
-                ctx.arc(x, y, size, 0, Math.PI * 2);
-                ctx.fill();
-            });
-        }
-
-        function detectEmotion(landmarks) {
-            // Key landmark indices
-            // Eyes: 33 (left outer), 133 (left inner), 362 (right inner), 263 (right outer)
-            // Mouth: 13 (upper lip), 14 (lower lip), 17 (right corner), 84 (left corner)
-            // Eyebrows: 105 (left inner), 107 (left outer), 276 (right outer), 282 (right inner)
-
-            // Calculate mouth openness
-            const upperLip = landmarks[13];
-            const lowerLip = landmarks[14];
-            const mouthOpen = Math.abs(lowerLip.y - upperLip.y);
-
-            // Calculate mouth corners
-            const leftCorner = landmarks[61];
-            const rightCorner = landmarks[291];
-            const mouthWidth = Math.abs(rightCorner.x - leftCorner.x);
-            const leftCornerY = leftCorner.y;
-            const rightCornerY = rightCorner.y;
+        function applySettings() {
+            const phoneFrame = document.getElementById('phoneFrame');
             
-            // Calculate smile (mouth corners up or down)
-            const mouthCornersDiff = (leftCornerY + rightCornerY) / 2 - upperLip.y;
-
-            // Calculate eye openness
-            const leftEyeOpen = Math.abs(landmarks[159].y - landmarks[145].y);
-            const rightEyeOpen = Math.abs(landmarks[386].y - landmarks[374].y);
-            const eyeOpenness = (leftEyeOpen + rightEyeOpen) / 2;
-
-            // Calculate eyebrow position
-            const leftBrow = landmarks[105];
-            const rightBrow = landmarks[276];
-            const browHeight = (landmarks[293].y + landmarks[300].y) / 2;
-            const browRaise = browHeight - (leftBrow.y + rightBrow.y) / 2;
-
-            // Calculate cheek fullness (emotion indicator)
-            const leftCheek = landmarks[187];
-            const rightCheek = landmarks[411];
-
-            // Decision logic for emotions
-            // Crying: mouth wide open, eyes may be squinted or wide
-            if (mouthOpen > 0.08 && mouthCornersDiff > 0.02) {
-                return { ...EMOTION_DATA.crying, confidence: 'High' };
+            if (settings.darkMode) {
+                phoneFrame.classList.add('dark-mode');
+                document.body.classList.add('dark-mode');
+            } else {
+                phoneFrame.classList.remove('dark-mode');
+                document.body.classList.remove('dark-mode');
             }
 
-            // Tired: eyes partially closed, mouth relatively neutral
-            if (eyeOpenness < 0.02 && mouthOpen < 0.04) {
-                return { ...EMOTION_DATA.tired, confidence: 'Medium' };
-            }
-
-            // Happy: mouth corners up (smile), eyes engaged
-            if (mouthCornersDiff > 0.01 && eyeOpenness > 0.02) {
-                return { ...EMOTION_DATA.happy, confidence: 'Medium' };
-            }
-
-            // Fussy: eyebrows raised or mouth slightly open, not happy
-            if (browRaise > 0.01 || (mouthOpen > 0.03 && mouthOpen < 0.07)) {
-                return { ...EMOTION_DATA.fussy, confidence: 'Medium' };
-            }
-
-            // Default: calm/neutral
-            return { ...EMOTION_DATA.calm, confidence: 'Low' };
+            document.getElementById('darkModeToggle').classList.toggle('active', settings.darkMode);
+            document.getElementById('soundEnabledToggle').classList.toggle('active', settings.soundEnabled);
+            document.getElementById('vibrationEnabledToggle').classList.toggle('active', settings.vibrationEnabled);
+            document.getElementById('autoSaveHistoryToggle').classList.toggle('active', settings.autoSaveHistory);
+            document.getElementById('showConfidenceToggle').classList.toggle('active', settings.showConfidence);
         }
 
-        function updateGUIOverlay(emotion) {
-            if (!emotion) {
-                elements.guiOverlay.classList.remove('active');
-                return;
-            }
-
-            elements.guiOverlay.classList.add('active');
-            elements.guiEmotion.textContent = emotion.emotion;
-            elements.guiConfidence.textContent = `Confidence: ${emotion.confidence}`;
-
-            // Update suggestions
-            const suggestionsHTML = emotion.suggestions.slice(0, 3).map(s => `<li>${s}</li>`).join('');
-            elements.guiSuggestions.innerHTML = suggestionsHTML || '<li>--</li>';
+        function toggleSetting(setting) {
+            settings[setting] = !settings[setting];
+            saveSettings();
         }
 
-        // ========================================
-        // Camera Functions
-        // ========================================
-        async function initCamera() {
-            try {
-                updateCameraStatus('loading', 'Loading AI model...');
-
-                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                    throw new Error('Camera not supported in this browser');
-                }
-
-                // Use back camera
-                cameraStream = await navigator.mediaDevices.getUserMedia({
-                    video: {
-                        facingMode: 'environment',
-                        width: { ideal: 1280 },
-                        height: { ideal: 720 }
-                    },
-                    audio: false
-                });
-
-                elements.cameraFeed.srcObject = cameraStream;
-                await elements.cameraFeed.play();
-
-                // Set canvas size
-                elements.faceCanvas.width = elements.cameraFeed.videoWidth;
-                elements.faceCanvas.height = elements.cameraFeed.videoHeight;
-
-                cameraInitialized = true;
-                elements.cameraContainer.classList.add('active');
-                updateCameraStatus('success', 'Camera ready');
-
-            } catch (error) {
-                console.log('Camera access error:', error);
-                let errorMessage = 'Camera unavailable';
-                if (error.name === 'NotAllowedError') {
-                    errorMessage = 'Camera permission denied';
-                } else if (error.name === 'NotFoundError') {
-                    errorMessage = 'No camera found';
-                }
-                updateCameraStatus('error', errorMessage);
-                elements.cameraPlaceholder.querySelector('p').textContent = `${errorMessage}. Refresh to try again.`;
-            }
+        function showClearHistoryModal() {
+            document.getElementById('clearHistoryModal').classList.add('active');
         }
 
-        function updateCameraStatus(type, message) {
-            elements.cameraStatus.textContent = message;
-            elements.cameraStatus.className = 'camera-status';
-            if (type === 'error') {
-                elements.cameraStatus.classList.add('error');
-            } else if (type === 'loading') {
-                elements.cameraStatus.classList.add('loading');
-            } else if (type === 'success') {
-                elements.cameraStatus.classList.add('success');
+        function hideClearHistoryModal() {
+            document.getElementById('clearHistoryModal').classList.remove('active');
+        }
+
+        function clearHistory() {
+            scanHistory = [];
+            localStorage.setItem('babySenseHistory', JSON.stringify(scanHistory));
+            hideClearHistoryModal();
+            showToast('History cleared');
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2000);
+        }
+
+        function loadHistory() {
+            const savedHistory = localStorage.getItem('babySenseHistory');
+            if (savedHistory) {
+                scanHistory = JSON.parse(savedHistory);
             }
         }
 
         function startScan() {
-            if (isScanning) return;
-            isScanning = true;
-            elements.scanButton.disabled = true;
-
             const homeScreen = document.getElementById('homeScreen');
             const demoScreen = document.getElementById('demoScreen');
+            const scanStatus = document.getElementById('scanStatus');
+            const resultCard = document.getElementById('resultCard');
 
             homeScreen.style.display = 'none';
             demoScreen.style.display = 'block';
-            elements.resultCard.style.display = 'none';
-            elements.scanTitle.textContent = 'Analyzing...';
-            elements.scanStatus.textContent = 'Examining your baby\'s face...';
-            elements.disclaimerText.style.display = 'none';
+            resultCard.style.display = 'none';
+            scanStatus.textContent = 'Taking a quick look at your baby\'s face...';
 
-            // Show scanning indicator
-            elements.scanningIndicator.classList.add('active');
-
-            // Perform analysis
-            performAnalysis();
-        }
-
-        function performAnalysis() {
-            // Check if face was detected
-            if (currentEmotion && currentFaceLandmarks) {
-                // Real analysis from face detection
-                setTimeout(() => {
-                    elements.scanningIndicator.classList.remove('active');
-                    displayResult(currentEmotion);
-                }, 1500);
-            } else {
-                // No face detected
-                setTimeout(() => {
-                    elements.scanningIndicator.classList.remove('active');
-                    elements.scanTitle.textContent = 'No Face Detected';
-                    elements.scanStatus.textContent = 'Please make sure your baby\'s face is visible in the camera.';
-                    elements.disclaimerText.textContent = 'Position your baby\'s face within the guide and try again.';
-                    elements.disclaimerText.style.display = 'block';
-                    isScanning = false;
-                    elements.scanButton.disabled = false;
-                }, 1500);
-            }
-        }
-
-        function displayResult(state) {
-            // Play sound and vibration
             if (settings.soundEnabled) {
-                playChimeSound();
-            }
-            if (settings.vibrationEnabled && navigator.vibrate) {
-                navigator.vibrate([200, 100, 200]);
+                console.log('Playing scan sound effect');
             }
 
-            elements.scanTitle.textContent = 'Here\'s what we noticed:';
-            elements.scanStatus.textContent = '';
-            elements.resultTitle.textContent = state.title;
-            elements.resultDesc.textContent = state.desc;
+            setTimeout(() => {
+                const state = states[Math.floor(Math.random() * states.length)];
 
-            elements.suggestionsTitle.textContent = state.type === 'Negative' ? 'Things to try' : 'Suggestions';
+                document.getElementById('resultTitle').textContent = state.title;
+                document.getElementById('resultDesc').textContent = state.desc;
 
-            const list = elements.suggestionsList;
-            list.innerHTML = '';
-            state.suggestions.forEach(item => {
-                const li = document.createElement('li');
-                li.textContent = item;
-                list.appendChild(li);
-            });
+                const list = document.getElementById('suggestionsList');
+                list.innerHTML = '';
+                state.suggestions.forEach(item => {
+                    const li = document.createElement('li');
+                    li.textContent = item;
+                    list.appendChild(li);
+                });
 
-            if (settings.autoSaveHistory) {
-                saveToHistory(state);
-            }
+                if (settings.autoSaveHistory) {
+                    saveToHistory(state);
+                }
 
-            elements.resultCard.style.display = 'block';
-            elements.disclaimerText.style.display = 'block';
-            elements.disclaimerText.textContent = 'Face analysis complete - detection ran on your device';
+                if (settings.vibrationEnabled) {
+                    console.log('Vibrating');
+                }
 
-            isScanning = false;
-            elements.scanButton.disabled = false;
-        }
-
-        function playChimeSound() {
-            try {
-                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                
-                // Create a pleasant chime sound
-                const playNote = (freq, time, duration) => {
-                    const oscillator = audioContext.createOscillator();
-                    const gainNode = audioContext.createGain();
-                    
-                    oscillator.connect(gainNode);
-                    gainNode.connect(audioContext.destination);
-                    
-                    oscillator.frequency.value = freq;
-                    oscillator.type = 'sine';
-                    
-                    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime + time);
-                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + time + duration);
-                    
-                    oscillator.start(audioContext.currentTime + time);
-                    oscillator.stop(audioContext.currentTime + time + duration);
-                };
-
-                // Play a cheerful chime
-                playNote(523.25, 0, 0.3);     // C5
-                playNote(659.25, 0.15, 0.3);  // E5
-                playNote(783.99, 0.3, 0.4);   // G5
-                
-            } catch (error) {
-                console.log('Audio not supported');
-            }
+                scanStatus.textContent = 'Here\'s what we noticed:';
+                resultCard.style.display = 'block';
+            }, 2000);
         }
 
         function goBack() {
@@ -1717,14 +1154,12 @@
             demoScreen.style.display = 'none';
         }
 
-        // ========================================
-        // History Functions
-        // ========================================
         function saveToHistory(state) {
             const historyEntry = {
                 timestamp: new Date(),
                 emotionType: state.type,
                 emotion: state.emotion,
+                fixes: state.fixes || null,
                 confidence: state.confidence
             };
             scanHistory.unshift(historyEntry);
@@ -1734,16 +1169,11 @@
             localStorage.setItem('babySenseHistory', JSON.stringify(scanHistory));
         }
 
-        function loadHistory() {
-            const savedHistory = localStorage.getItem('babySenseHistory');
-            if (savedHistory) {
-                scanHistory = JSON.parse(savedHistory);
-            }
-        }
-
         function renderHistory() {
+            const historyList = document.getElementById('historyList');
+            
             if (scanHistory.length === 0) {
-                elements.historyList.innerHTML = `
+                historyList.innerHTML = `
                     <div class="history-empty">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -1754,21 +1184,27 @@
                 return;
             }
 
-            elements.historyList.innerHTML = '';
+            historyList.innerHTML = '';
             scanHistory.forEach((entry) => {
-                const date = new Date(entry.timestamp);
-                const dateStr = date.toLocaleDateString();
-                const time = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                const date = entry.timestamp.toLocaleDateString();
+                const time = entry.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                 
                 let html = `
                     <div class="history-item">
                         <div class="history-label">Date</div>
-                        <div class="history-value">${dateStr} at ${time}</div>
+                        <div class="history-value">${date} at ${time}</div>
                         <div class="history-label">Emotion type</div>
                         <div class="history-value">${entry.emotionType}</div>
                         <div class="history-label">Emotion</div>
                         <div class="history-value">${entry.emotion}</div>
                 `;
+                
+                if (entry.fixes && settings.showConfidence) {
+                    html += `
+                        <div class="history-label">fixes</div>
+                        <div class="history-value">${entry.fixes}</div>
+                    `;
+                }
                 
                 if (settings.showConfidence) {
                     html += `
@@ -1777,69 +1213,14 @@
                     `;
                 }
                 
-                html += `</div>`;
-                elements.historyList.innerHTML += html;
+                html += `
+                    </div>
+                `;
+                
+                historyList.innerHTML += html;
             });
         }
 
-        function clearHistory() {
-            scanHistory = [];
-            localStorage.setItem('babySenseHistory', JSON.stringify(scanHistory));
-            hideClearHistoryModal();
-            showToast('History cleared');
-        }
-
-        // ========================================
-        // Settings Functions
-        // ========================================
-        function loadSettings() {
-            const savedSettings = localStorage.getItem('babySenseSettings');
-            if (savedSettings) {
-                settings = { ...settings, ...JSON.parse(savedSettings) };
-            }
-            applySettings();
-        }
-
-        function saveSettings() {
-            localStorage.setItem('babySenseSettings', JSON.stringify(settings));
-            applySettings();
-        }
-
-        function applySettings() {
-            // Dark mode
-            if (settings.darkMode) {
-                elements.phoneFrame.classList.add('dark-mode');
-                document.body.classList.add('dark-mode');
-            } else {
-                elements.phoneFrame.classList.remove('dark-mode');
-                document.body.classList.remove('dark-mode');
-            }
-
-            // Fullscreen camera
-            if (settings.fullscreenCamera) {
-                elements.cameraContainer.classList.add('fullscreen');
-            } else {
-                elements.cameraContainer.classList.remove('fullscreen');
-            }
-
-            // Update toggles
-            document.getElementById('darkModeToggle').classList.toggle('active', settings.darkMode);
-            document.getElementById('soundEnabledToggle').classList.toggle('active', settings.soundEnabled);
-            document.getElementById('vibrationEnabledToggle').classList.toggle('active', settings.vibrationEnabled);
-            document.getElementById('autoSaveHistoryToggle').classList.toggle('active', settings.autoSaveHistory);
-            document.getElementById('showConfidenceToggle').classList.toggle('active', settings.showConfidence);
-            document.getElementById('fullscreenCameraToggle').classList.toggle('active', settings.fullscreenCamera);
-        }
-
-        function toggleSetting(setting) {
-            settings[setting] = !settings[setting];
-            saveSettings();
-            showToast(`${setting === 'darkMode' ? 'Dark mode' : setting === 'soundEnabled' ? 'Sound' : setting === 'vibrationEnabled' ? 'Vibration' : setting === 'autoSaveHistory' ? 'Auto-save' : setting === 'showConfidence' ? 'Confidence' : 'Fullscreen'} ${settings[setting] ? 'enabled' : 'disabled'}`);
-        }
-
-        // ========================================
-        // Navigation Functions
-        // ========================================
         function switchTab(tab, element) {
             const homeScreen = document.getElementById('homeScreen');
             const demoScreen = document.getElementById('demoScreen');
@@ -1871,31 +1252,7 @@
             }
         }
 
-        // ========================================
-        // Modal Functions
-        // ========================================
-        function showClearHistoryModal() {
-            elements.clearHistoryModal.classList.add('active');
-        }
-
-        function hideClearHistoryModal() {
-            elements.clearHistoryModal.classList.remove('active');
-        }
-
-        function showToast(message) {
-            elements.toast.textContent = message;
-            elements.toast.classList.add('show');
-            setTimeout(() => {
-                elements.toast.classList.remove('show');
-            }, 2000);
-        }
-
-        // Close modal when clicking outside
-        elements.clearHistoryModal.addEventListener('click', (e) => {
-            if (e.target === elements.clearHistoryModal) {
-                hideClearHistoryModal();
-            }
-        });
+        loadSettings();
+        loadHistory();
     </script>
 </body>
-</html>
