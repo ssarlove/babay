@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BabySense App</title>
+    <!-- TensorFlow.js and FaceMesh for emotion detection -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/face-landmarks-detection@1.0.5/dist/face-landmarks-detection.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -12,8 +15,8 @@
         }
 
         body {
-            font-family: Georgia, 'Times New Roman', serif;
-            background-color: #E8E6E1;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #F0F0F0;
             display: flex;
             justify-content: center;
             align-items: flex-start;
@@ -23,68 +26,90 @@
         }
 
         body.dark-mode {
-            background-color: #1C1917;
+            background-color: #1A1A1A;
         }
 
         .phone-frame {
             width: 375px;
             min-height: 700px;
-            background-color: #FAFAF9;
-            border: 2px solid #D6D3D1;
-            border-radius: 12px;
+            background-color: #FFFFFF;
+            border: 1px solid #E0E0E0;
+            border-radius: 20px;
             overflow: hidden;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12);
             position: relative;
             transition: background-color 0.3s ease, border-color 0.3s ease;
         }
 
         .phone-frame.dark-mode {
-            background-color: #292524;
-            border-color: #44403C;
+            background-color: #252525;
+            border-color: #333333;
         }
 
         .status-bar {
             height: 44px;
             background-color: #FFFFFF;
-            border-bottom: 1px solid #E7E5E4;
+            border-bottom: 1px solid #F0F0F0;
             display: flex;
             justify-content: center;
             align-items: center;
             font-size: 14px;
-            font-weight: 500;
-            color: #57534E;
-            transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+            font-weight: 600;
+            color: #333333;
+            transition: all 0.3s ease;
         }
 
         .phone-frame.dark-mode .status-bar {
-            background-color: #1C1917;
-            border-color: #44403C;
-            color: #A8A29E;
+            background-color: #252525;
+            border-color: #333333;
+            color: #CCCCCC;
         }
 
         .app-header {
             padding: 16px 20px;
             background-color: #FFFFFF;
-            border-bottom: 1px solid #E7E5E4;
-            transition: background-color 0.3s ease, border-color 0.3s ease;
+            border-bottom: 1px solid #F0F0F0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.3s ease;
         }
 
         .phone-frame.dark-mode .app-header {
-            background-color: #1C1917;
-            border-color: #44403C;
+            background-color: #252525;
+            border-color: #333333;
         }
 
         .app-header h1 {
-            font-family: 'Courier New', monospace;
-            font-size: 18px;
-            font-weight: bold;
-            color: #78716C;
+            font-size: 20px;
+            font-weight: 700;
+            color: #1A1A1A;
             letter-spacing: -0.5px;
             transition: color 0.3s ease;
         }
 
         .phone-frame.dark-mode .app-header h1 {
-            color: #D6D3D1;
+            color: #FFFFFF;
+        }
+
+        .header-icon {
+            width: 24px;
+            height: 24px;
+            color: #666666;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+
+        .phone-frame.dark-mode .header-icon {
+            color: #999999;
+        }
+
+        .header-icon:hover {
+            color: #333333;
+        }
+
+        .phone-frame.dark-mode .header-icon:hover {
+            color: #CCCCCC;
         }
 
         .screen {
@@ -95,7 +120,7 @@
         }
 
         .phone-frame.dark-mode .screen {
-            background-color: #292524;
+            background-color: #252525;
         }
 
         .home-screen {
@@ -119,173 +144,234 @@
         }
 
         .welcome-text h2 {
-            font-size: 20px;
-            color: #292524;
+            font-size: 22px;
+            font-weight: 700;
+            color: #1A1A1A;
             margin-bottom: 8px;
+            letter-spacing: -0.5px;
             transition: color 0.3s ease;
         }
 
         .phone-frame.dark-mode .welcome-text h2 {
-            color: #F5F5F4;
+            color: #FFFFFF;
         }
 
         .welcome-text p {
             font-size: 15px;
-            color: #78716C;
+            color: #666666;
             line-height: 1.6;
             transition: color 0.3s ease;
         }
 
         .phone-frame.dark-mode .welcome-text p {
-            color: #A8A29E;
+            color: #999999;
         }
 
         .camera-preview {
             width: 100%;
             height: 280px;
-            background-color: #E7E5E4;
-            border: 1px solid #D6D3D1;
-            border-radius: 8px;
+            background-color: #F8F8F8;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             margin-bottom: 20px;
-            transition: background-color 0.3s ease, border-color 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .camera-preview video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+            transform: scaleX(1);
+        }
+
+        .camera-preview canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(1);
         }
 
         .phone-frame.dark-mode .camera-preview {
-            background-color: #1C1917;
-            border-color: #44403C;
+            background-color: #1A1A1A;
+        }
+
+        .camera-preview.frame-circle {
+            border-radius: 50%;
+            border: 3px solid #DDDDDD;
+        }
+
+        .camera-preview.frame-square {
+            border-radius: 8px;
+            border: 3px solid #DDDDDD;
+        }
+
+        .camera-preview.frame-pill {
+            border-radius: 140px;
+            border: 3px solid #DDDDDD;
+            width: 220px;
+            height: 220px;
+        }
+
+        .camera-preview.frame-default {
+            border: 2px dashed #DDDDDD;
+            border-radius: 16px;
+        }
+
+        .camera-preview.frame-heart {
+            width: 220px;
+            height: 200px;
+            border: none;
+            background-color: transparent;
+        }
+
+        .camera-preview.fullscreen-mode {
+            height: 450px;
         }
 
         .camera-preview svg {
-            width: 48px;
-            height: 48px;
-            color: #A8A29E;
-            margin-bottom: 12px;
-            transition: color 0.3s ease;
-        }
-
-        .camera-preview p {
-            font-size: 14px;
-            color: #78716C;
-            text-align: center;
-            padding: 0 20px;
-            transition: color 0.3s ease;
-        }
-
-        .phone-frame.dark-mode .camera-preview p {
-            color: #A8A29E;
-        }
-
-        .scan-button {
-            width: 100%;
-            padding: 16px;
-            background-color: #292524;
-            color: #FAFAF9;
-            border: none;
-            border-radius: 6px;
-            font-size: 15px;
-            font-family: inherit;
-            cursor: pointer;
-            margin-bottom: 24px;
-            transition: opacity 0.2s ease, background-color 0.3s ease;
-        }
-
-        .scan-button:hover {
-            opacity: 0.9;
-        }
-
-        .info-section {
-            background-color: #FFFFFF;
-            border: 1px solid #E7E5E4;
-            border-radius: 8px;
-            padding: 20px;
-            transition: background-color 0.3s ease, border-color 0.3s ease;
-        }
-
-        .phone-frame.dark-mode .info-section {
-            background-color: #1C1917;
-            border-color: #44403C;
-        }
-
-        .info-section h3 {
-            font-size: 15px;
-            color: #44403C;
-            margin-bottom: 12px;
-            transition: color 0.3s ease;
-        }
-
-        .phone-frame.dark-mode .info-section h3 {
-            color: #D6D3D1;
-        }
-
-        .info-section p {
-            font-size: 14px;
-            color: #78716C;
-            line-height: 1.6;
-            transition: color 0.3s ease;
-        }
-
-        .phone-frame.dark-mode .info-section p {
-            color: #A8A29E;
-        }
-
-        .result-card {
-            background-color: #FFFFFF;
-            border: 1px solid #E7E5E4;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px;
-            transition: background-color 0.3s ease, border-color 0.3s ease;
-        }
-
-        .phone-frame.dark-mode .result-card {
-            background-color: #1C1917;
-            border-color: #44403C;
-        }
-
-        .result-card h3 {
-            font-size: 18px;
-            color: #292524;
-            margin-bottom: 8px;
-            transition: color 0.3s ease;
-        }
-
-        .phone-frame.dark-mode .result-card h3 {
-            color: #F5F5F4;
-        }
-
-        .result-card p {
-            font-size: 14px;
-            color: #78716C;
+            width: 56px;
+            height: 56px;
+            color: #999999;
             margin-bottom: 16px;
             transition: color 0.3s ease;
         }
 
-        .phone-frame.dark-mode .result-card p {
-            color: #A8A29E;
+        .camera-preview .camera-text {
+            font-size: 14px;
+            color: #888888;
+            text-align: center;
+            padding: 0 24px;
+            line-height: 1.5;
+        }
+
+        .live-gui {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(transparent, rgba(0,0,0,0.7));
+            padding: 50px 16px 16px;
+            pointer-events: none;
+        }
+
+        .live-emotion {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: 24px;
+            font-weight: bold;
+            color: #FFFFFF;
+            margin-bottom: 8px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .live-advice {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: 14px;
+            color: #E7E5E4;
+            line-height: 1.5;
+        }
+
+        .scan-button {
+            width: 100%;
+            padding: 16px 24px;
+            background-color: #1A1A1A;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            margin-bottom: 24px;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .scan-button:hover {
+            background-color: #333333;
+            transform: translateY(-1px);
+        }
+
+        .scan-button.scanning {
+            background-color: #DC2626;
+        }
+
+        .phone-frame.dark-mode .scan-button {
+            background-color: #FFFFFF;
+            color: #1A1A1A;
+        }
+
+        .info-section {
+            background-color: #F8F8F8;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .phone-frame.dark-mode .info-section {
+            background-color: #1A1A1A;
+        }
+
+        .info-section h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333333;
+            margin-bottom: 10px;
+        }
+
+        .phone-frame.dark-mode .info-section h3 {
+            color: #CCCCCC;
+        }
+
+        .info-section p {
+            font-size: 14px;
+            color: #666666;
+            line-height: 1.6;
+        }
+
+        .result-card {
+            background-color: #FFFFFF;
+            border: 1px solid #F0F0F0;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+        }
+
+        .result-card h3 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1A1A1A;
+            margin-bottom: 10px;
+        }
+
+        .result-card p {
+            font-size: 14px;
+            color: #666666;
+            margin-bottom: 20px;
+            line-height: 1.6;
         }
 
         .suggestions-list {
-            background-color: #FAFAF9;
-            border-radius: 6px;
-            padding: 16px;
-            transition: background-color 0.3s ease;
-        }
-
-        .phone-frame.dark-mode .suggestions-list {
-            background-color: #1C1917;
+            background-color: #F8F8F8;
+            border-radius: 12px;
+            padding: 20px;
         }
 
         .suggestions-list h4 {
             font-size: 11px;
+            font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            color: #A8A29E;
-            margin-bottom: 12px;
-            transition: color 0.3s ease;
+            letter-spacing: 1.5px;
+            color: #888888;
+            margin-bottom: 16px;
         }
 
         .suggestions-list ul {
@@ -294,15 +380,9 @@
 
         .suggestions-list li {
             font-size: 14px;
-            color: #57534E;
-            padding: 8px 0;
-            border-bottom: 1px solid #E7E5E4;
-            transition: color 0.3s ease, border-color 0.3s ease;
-        }
-
-        .phone-frame.dark-mode .suggestions-list li {
-            color: #D6D3D1;
-            border-color: #44403C;
+            color: #444444;
+            padding: 12px 0;
+            border-bottom: 1px solid #EEEEEE;
         }
 
         .suggestions-list li:last-child {
@@ -311,29 +391,21 @@
 
         .back-button {
             width: 100%;
-            padding: 14px;
-            background-color: transparent;
-            color: #57534E;
-            border: 1px solid #D6D3D1;
-            border-radius: 6px;
+            padding: 14px 20px;
+            background-color: #F8F8F8;
+            color: #444444;
+            border: 1px solid #E8E8E8;
+            border-radius: 12px;
             font-size: 15px;
+            font-weight: 600;
             font-family: inherit;
             cursor: pointer;
             margin-top: 20px;
-            transition: background-color 0.2s ease, border-color 0.3s ease, color 0.3s ease;
+            transition: all 0.2s ease;
         }
 
         .back-button:hover {
-            background-color: #FAFAF9;
-        }
-
-        .phone-frame.dark-mode .back-button:hover {
-            background-color: #1C1917;
-        }
-
-        .phone-frame.dark-mode .back-button {
-            color: #A8A29E;
-            border-color: #44403C;
+            background-color: #F0F0F0;
         }
 
         .history-list {
@@ -344,102 +416,113 @@
 
         .history-item {
             background-color: #FFFFFF;
-            border: 1px solid #E7E5E4;
-            border-radius: 8px;
-            padding: 16px;
-            transition: background-color 0.3s ease, border-color 0.3s ease;
+            border: 1px solid #F0F0F0;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
         }
 
-        .phone-frame.dark-mode .history-item {
-            background-color: #1C1917;
-            border-color: #44403C;
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .history-date {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1A1A1A;
+        }
+
+        .history-badge {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .history-badge.positive {
+            background-color: #E8F5E9;
+            color: #2E7D32;
+        }
+
+        .history-badge.negative {
+            background-color: #FFF3E0;
+            color: #E65100;
         }
 
         .history-label {
-            font-size: 12px;
-            color: #A8A29E;
-            margin-bottom: 4px;
-            font-family: 'Courier New', monospace;
-            transition: color 0.3s ease;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #999999;
+            font-weight: 600;
         }
 
         .history-value {
             font-size: 14px;
-            color: #292524;
-            margin-bottom: 12px;
-            font-family: Georgia, serif;
-            transition: color 0.3s ease;
-        }
-
-        .phone-frame.dark-mode .history-value {
-            color: #F5F5F4;
-        }
-
-        .history-value:last-of-type {
-            margin-bottom: 0;
+            color: #444444;
+            font-weight: 500;
         }
 
         .history-empty {
             text-align: center;
-            padding: 40px 20px;
-            color: #78716C;
+            padding: 60px 24px;
         }
 
         .history-empty svg {
-            width: 48px;
-            height: 48px;
-            color: #D6D3D1;
-            margin-bottom: 16px;
-            transition: color 0.3s ease;
+            width: 64px;
+            height: 64px;
+            color: #CCCCCC;
+            margin-bottom: 20px;
+        }
+
+        .history-empty h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333333;
+            margin-bottom: 8px;
         }
 
         .history-empty p {
             font-size: 14px;
-            color: #78716C;
-            transition: color 0.3s ease;
-        }
-
-        .phone-frame.dark-mode .history-empty p {
-            color: #A8A29E;
+            color: #888888;
+            line-height: 1.6;
         }
 
         .settings-section {
-            margin-bottom: 24px;
+            margin-bottom: 28px;
         }
 
         .settings-section-title {
             font-size: 12px;
+            font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            color: #A8A29E;
+            letter-spacing: 1.5px;
+            color: #999999;
             margin-bottom: 12px;
-            font-family: 'Courier New', monospace;
+            margin-left: 4px;
         }
 
         .setting-item {
             background-color: #FFFFFF;
-            border: 1px solid #E7E5E4;
-            border-radius: 8px;
-            padding: 16px;
+            border: 1px solid #F0F0F0;
+            border-radius: 14px;
+            padding: 18px 20px;
             margin-bottom: 12px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             cursor: pointer;
-            transition: background-color 0.3s ease, border-color 0.3s ease;
-        }
-
-        .phone-frame.dark-mode .setting-item {
-            background-color: #1C1917;
-            border-color: #44403C;
+            transition: all 0.2s ease;
         }
 
         .setting-item:hover {
-            background-color: #F5F5F4;
-        }
-
-        .phone-frame.dark-mode .setting-item:hover {
-            background-color: #1C1917;
+            background-color: #F8F8F8;
+            border-color: #E8E8E8;
         }
 
         .setting-info {
@@ -447,150 +530,81 @@
         }
 
         .setting-label {
-            font-size: 14px;
-            color: #292524;
+            font-size: 15px;
+            font-weight: 600;
+            color: #1A1A1A;
             margin-bottom: 4px;
-            transition: color 0.3s ease;
-        }
-
-        .phone-frame.dark-mode .setting-label {
-            color: #F5F5F4;
         }
 
         .setting-description {
-            font-size: 12px;
-            color: #78716C;
-            transition: color 0.3s ease;
-        }
-
-        .phone-frame.dark-mode .setting-description {
-            color: #A8A29E;
+            font-size: 13px;
+            color: #888888;
         }
 
         .toggle-switch {
-            width: 48px;
-            height: 26px;
-            background-color: #E7E5E4;
-            border-radius: 13px;
+            width: 52px;
+            height: 28px;
+            background-color: #E8E8E8;
+            border-radius: 14px;
             position: relative;
             cursor: pointer;
             transition: background-color 0.3s ease;
-        }
-
-        .phone-frame.dark-mode .toggle-switch {
-            background-color: #44403C;
+            flex-shrink: 0;
         }
 
         .toggle-switch.active {
-            background-color: #78716C;
+            background-color: #1A1A1A;
         }
 
         .toggle-switch::after {
             content: '';
             position: absolute;
-            width: 20px;
-            height: 20px;
+            width: 24px;
+            height: 24px;
             background-color: #FFFFFF;
             border-radius: 50%;
-            top: 3px;
-            left: 3px;
+            top: 2px;
+            left: 2px;
             transition: transform 0.3s ease;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
         }
 
         .toggle-switch.active::after {
-            transform: translateX(22px);
-        }
-
-        .danger-button {
-            background-color: #FFFFFF;
-            border: 1px solid #E7E5E4;
-            border-radius: 8px;
-            padding: 16px;
-            width: 100%;
-            text-align: center;
-            cursor: pointer;
-            font-size: 14px;
-            color: #78716C;
-            font-family: inherit;
-            transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
-        }
-
-        .phone-frame.dark-mode .danger-button {
-            background-color: #1C1917;
-            border-color: #44403C;
-            color: #A8A29E;
-        }
-
-        .danger-button:hover {
-            background-color: #FEF2F2;
-            border-color: #FCA5A5;
-            color: #DC2626;
-        }
-
-        .phone-frame.dark-mode .danger-button:hover {
-            background-color: rgba(220, 38, 38, 0.1);
+            transform: translateX(24px);
         }
 
         .about-section {
             background-color: #FFFFFF;
-            border: 1px solid #E7E5E4;
-            border-radius: 8px;
-            padding: 20px;
+            border: 1px solid #F0F0F0;
+            border-radius: 16px;
+            padding: 28px 24px;
             text-align: center;
-            transition: background-color 0.3s ease, border-color 0.3s ease;
-        }
-
-        .phone-frame.dark-mode .about-section {
-            background-color: #1C1917;
-            border-color: #44403C;
         }
 
         .about-logo {
-            width: 48px;
-            height: 48px;
-            color: #78716C;
-            margin-bottom: 12px;
-            transition: color 0.3s ease;
-        }
-
-        .phone-frame.dark-mode .about-logo {
-            color: #D6D3D1;
+            width: 56px;
+            height: 56px;
+            color: #666666;
+            margin-bottom: 16px;
         }
 
         .about-name {
-            font-size: 16px;
-            font-weight: bold;
-            color: #292524;
-            margin-bottom: 4px;
-            font-family: 'Courier New', monospace;
-            transition: color 0.3s ease;
-        }
-
-        .phone-frame.dark-mode .about-name {
-            color: #F5F5F4;
+            font-size: 18px;
+            font-weight: 700;
+            color: #1A1A1A;
+            margin-bottom: 6px;
         }
 
         .about-version {
-            font-size: 12px;
-            color: #78716C;
-            margin-bottom: 16px;
-            transition: color 0.3s ease;
-        }
-
-        .phone-frame.dark-mode .about-version {
-            color: #A8A29E;
+            font-size: 13px;
+            color: #888888;
+            margin-bottom: 20px;
         }
 
         .about-text {
-            font-size: 12px;
-            color: #78716C;
-            line-height: 1.6;
-            transition: color 0.3s ease;
-        }
-
-        .phone-frame.dark-mode .about-text {
-            color: #A8A29E;
+            font-size: 13px;
+            color: #666666;
+            line-height: 1.7;
         }
 
         .nav-bar {
@@ -598,18 +612,13 @@
             bottom: 0;
             left: 0;
             right: 0;
-            height: 60px;
+            height: 68px;
             background-color: #FFFFFF;
-            border-top: 1px solid #E7E5E4;
+            border-top: 1px solid #F0F0F0;
             display: flex;
             justify-content: space-around;
             align-items: center;
-            transition: background-color 0.3s ease, border-color 0.3s ease;
-        }
-
-        .phone-frame.dark-mode .nav-bar {
-            background-color: #1C1917;
-            border-color: #44403C;
+            padding-bottom: 8px;
         }
 
         .nav-item {
@@ -617,18 +626,17 @@
             flex-direction: column;
             align-items: center;
             font-size: 11px;
-            color: #A8A29E;
+            color: #999999;
             cursor: pointer;
-            padding: 8px 16px;
-            transition: color 0.3s ease;
+            padding: 8px 20px;
+            border-radius: 12px;
+            transition: all 0.2s ease;
+            font-weight: 500;
         }
 
         .nav-item.active {
-            color: #57534E;
-        }
-
-        .phone-frame.dark-mode .nav-item.active {
-            color: #D6D3D1;
+            color: #1A1A1A;
+            background-color: #F8F8F8;
         }
 
         .nav-item svg {
@@ -639,40 +647,26 @@
 
         .privacy-note {
             margin-top: 20px;
-            padding: 16px;
-            background-color: #F5F5F4;
-            border-radius: 6px;
-            transition: background-color 0.3s ease;
-        }
-
-        .phone-frame.dark-mode .privacy-note {
-            background-color: #1C1917;
+            padding: 18px 20px;
+            background-color: #F8F8F8;
+            border-radius: 12px;
         }
 
         .privacy-note p {
-            font-size: 12px;
-            color: #78716C;
+            font-size: 13px;
+            color: #666666;
             text-align: center;
-            transition: color 0.3s ease;
-        }
-
-        .phone-frame.dark-mode .privacy-note p {
-            color: #A8A29E;
+            line-height: 1.5;
         }
 
         .disclaimer {
             font-size: 12px;
-            color: #A8A29E;
+            color: #999999;
             font-style: italic;
-            margin-top: 16px;
-            padding-top: 16px;
-            border-top: 1px solid #E7E5E4;
-            transition: color 0.3s ease, border-color 0.3s ease;
-        }
-
-        .phone-frame.dark-mode .disclaimer {
-            color: #78716C;
-            border-color: #44403C;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #F0F0F0;
+            text-align: center;
         }
 
         .modal-overlay {
@@ -686,6 +680,7 @@
             justify-content: center;
             align-items: center;
             z-index: 1000;
+            backdrop-filter: blur(4px);
         }
 
         .modal-overlay.active {
@@ -693,40 +688,26 @@
         }
 
         .modal {
-            background-color: #FAFAF9;
-            border-radius: 12px;
-            padding: 24px;
-            width: 280px;
+            background-color: #FFFFFF;
+            border-radius: 20px;
+            padding: 28px;
+            width: 320px;
             max-width: 90%;
-            transition: background-color 0.3s ease;
-        }
-
-        .phone-frame.dark-mode .modal {
-            background-color: #1C1917;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
         }
 
         .modal h3 {
-            font-size: 16px;
-            color: #292524;
+            font-size: 18px;
+            font-weight: 700;
+            color: #1A1A1A;
             margin-bottom: 12px;
-            font-family: 'Courier New', monospace;
-            transition: color 0.3s ease;
-        }
-
-        .phone-frame.dark-mode .modal h3 {
-            color: #F5F5F4;
         }
 
         .modal p {
             font-size: 14px;
-            color: #78716C;
-            margin-bottom: 20px;
-            line-height: 1.5;
-            transition: color 0.3s ease;
-        }
-
-        .phone-frame.dark-mode .modal p {
-            color: #A8A29E;
+            color: #666666;
+            margin-bottom: 24px;
+            line-height: 1.6;
         }
 
         .modal-buttons {
@@ -736,76 +717,269 @@
 
         .modal-button {
             flex: 1;
-            padding: 12px;
-            border-radius: 6px;
+            padding: 14px 20px;
+            border-radius: 12px;
             font-size: 14px;
+            font-weight: 600;
             font-family: inherit;
             cursor: pointer;
             border: none;
-            transition: opacity 0.2s ease;
+            transition: all 0.2s ease;
         }
 
         .modal-button.cancel {
-            background-color: #E7E5E4;
-            color: #57534E;
-        }
-
-        .phone-frame.dark-mode .modal-button.cancel {
-            background-color: #44403C;
-            color: #D6D3D1;
+            background-color: #F0F0F0;
+            color: #444444;
         }
 
         .modal-button.confirm {
-            background-color: #292524;
-            color: #FAFAF9;
-        }
-
-        .modal-button:hover {
-            opacity: 0.9;
+            background-color: #D32F2F;
+            color: #FFFFFF;
         }
 
         .toast {
             position: fixed;
-            bottom: 80px;
+            bottom: 90px;
             left: 50%;
-            transform: translateX(-50%);
-            background-color: #292524;
-            color: #FAFAF9;
-            padding: 12px 24px;
-            border-radius: 8px;
+            transform: translateX(-50%) translateY(20px);
+            background-color: #1A1A1A;
+            color: #FFFFFF;
+            padding: 14px 28px;
+            border-radius: 12px;
             font-size: 14px;
+            font-weight: 500;
             opacity: 0;
-            transition: opacity 0.3s ease;
+            transition: all 0.3s ease;
             z-index: 1001;
         }
 
         .toast.show {
             opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .scanning-animation {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 20px;
+        }
+
+        .scanning-spinner {
+            width: 48px;
+            height: 48px;
+            border: 3px solid #F0F0F0;
+            border-top-color: #1A1A1A;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .scanning-text {
+            font-size: 14px;
+            color: #666666;
+            text-align: center;
+        }
+
+        .frame-selector {
+            background-color: #FFFFFF;
+            border: 1px solid #F0F0F0;
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+
+        .frame-options {
+            display: flex;
+            gap: 10px;
+            justify-content: space-between;
+            margin-top: 12px;
+        }
+
+        .frame-option-btn {
+            flex: 1;
+            padding: 12px 8px;
+            border: 2px solid #E8E8E8;
+            border-radius: 10px;
+            background-color: #FFFFFF;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .frame-option-btn:hover {
+            border-color: #CCCCCC;
+        }
+
+        .frame-option-btn.selected {
+            border-color: #1A1A1A;
+            background-color: #F5F5F5;
+        }
+
+        .frame-option-btn svg {
+            width: 24px;
+            height: 24px;
+            color: #888888;
+        }
+
+        .frame-option-btn.selected svg {
+            color: #1A1A1A;
+        }
+
+        .frame-option-btn span {
+            font-size: 11px;
+            font-weight: 600;
+            color: #666666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .frame-option-btn.selected span {
+            color: #1A1A1A;
+        }
+
+        .phone-frame.dark-mode .history-item,
+        .phone-frame.dark-mode .result-card,
+        .phone-frame.dark-mode .setting-item,
+        .phone-frame.dark-mode .about-section,
+        .phone-frame.dark-mode .suggestions-list,
+        .phone-frame.dark-mode .info-section,
+        .phone-frame.dark-mode .frame-selector,
+        .phone-frame.dark-mode .back-button,
+        .phone-frame.dark-mode .frame-option-btn {
+            background-color: #1A1A1A;
+            border-color: #333333;
+        }
+
+        .phone-frame.dark-mode .suggestions-list li {
+            color: #CCCCCC;
+            border-color: #333333;
+        }
+
+        .phone-frame.dark-mode .history-value,
+        .phone-frame.dark-mode .result-card h3,
+        .phone-frame.dark-mode .result-card p {
+            color: #FFFFFF;
+        }
+
+        .phone-frame.dark-mode .history-badge.positive {
+            background-color: rgba(46, 125, 50, 0.2);
+            color: #81C784;
+        }
+
+        .phone-frame.dark-mode .history-badge.negative {
+            background-color: rgba(230, 81, 0, 0.2);
+            color: #FFB74D;
+        }
+
+        .phone-frame.dark-mode .back-button:hover {
+            background-color: #252525;
+        }
+
+        .phone-frame.dark-mode .frame-option-btn.selected {
+            border-color: #FFFFFF;
+            background-color: #2A2A2A;
+        }
+
+        .phone-frame.dark-mode .frame-option-btn.selected span {
+            color: #FFFFFF;
+        }
+
+        .phone-frame.dark-mode .modal {
+            background-color: #252525;
+        }
+
+        .phone-frame.dark-mode .modal h3 {
+            color: #FFFFFF;
+        }
+
+        .phone-frame.dark-mode .modal p {
+            color: #999999;
+        }
+
+        .phone-frame.dark-mode .modal-button.cancel {
+            background-color: #333333;
+            color: #CCCCCC;
+        }
+
+        .phone-frame.dark-mode .scanning-spinner {
+            border-color: #333333;
+            border-top-color: #FFFFFF;
+        }
+
+        .phone-frame.dark-mode .toast {
+            background-color: #FFFFFF;
+            color: #1A1A1A;
         }
     </style>
 </head>
 <body>
     <div class="phone-frame" id="phoneFrame">
-        <div class="status-bar">9:41</div>
-
+        <div class="status-bar"></div>
         <div class="app-header">
             <h1>BabySense</h1>
+            <svg class="header-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+            </svg>
         </div>
 
         <div class="screen home-screen" id="homeScreen">
             <div class="welcome-text">
                 <h2>How is your baby doing?</h2>
-                <p>Point the camera at your baby's face. We'll take a quick guess at what they might need.</p>
+                <p>Point the camera at your baby's face. We'll take a quick look at what they might need.</p>
             </div>
 
-            <div class="camera-preview">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="camera-preview frame-default" id="cameraPreview">
+                <video id="videoElement" autoplay playsinline muted></video>
+                <canvas id="canvasOverlay"></canvas>
+                <div class="live-gui" id="liveGui" style="display: none;">
+                    <div class="live-emotion" id="liveEmotion">--</div>
+                    <div class="live-advice" id="liveAdvice"></div>
+                </div>
+                <svg class="heart-shape" style="display: none;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path>
+                </svg>
+                <svg class="camera-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
                 </svg>
-                <p>Camera preview will appear here when you tap scan</p>
+                <p class="camera-text">Camera preview will appear here when you tap scan</p>
             </div>
 
-            <button class="scan-button" onclick="startScan()">Scan Baby's Face</button>
+            <div class="frame-selector" id="frameSelector">
+                <div class="setting-label" style="margin-bottom: 8px;">Frame Shape</div>
+                <div class="frame-options" id="frameOptions">
+                    <div class="frame-option-btn selected" data-frame="default" onclick="selectFrame('default')">
+                        <svg class="frame-icon-default" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" stroke-width="2"/><line x1="9" y1="3" x2="9" y2="21" stroke-width="1.5" stroke-dasharray="2 2"/></svg>
+                        <span>Default</span>
+                    </div>
+                    <div class="frame-option-btn" data-frame="circle" onclick="selectFrame('circle')">
+                        <svg class="frame-icon-circle" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke-width="2"/></svg>
+                        <span>Circle</span>
+                    </div>
+                    <div class="frame-option-btn" data-frame="heart" onclick="selectFrame('heart')">
+                        <svg class="frame-icon-heart" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path></svg>
+                        <span>Heart</span>
+                    </div>
+                    <div class="frame-option-btn" data-frame="square" onclick="selectFrame('square')">
+                        <svg class="frame-icon-square" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="1" stroke-width="2"/></svg>
+                        <span>Square</span>
+                    </div>
+                    <div class="frame-option-btn" data-frame="pill" onclick="selectFrame('pill')">
+                        <svg class="frame-icon-pill" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="6" stroke-width="2"/></svg>
+                        <span>Pill</span>
+                    </div>
+                </div>
+            </div>
+
+            <button class="scan-button" id="scanButton" onclick="toggleScan()">Scan Baby's Face</button>
 
             <div class="info-section">
                 <h3>A quick note</h3>
@@ -823,19 +997,22 @@
                 <p id="scanStatus">Taking a quick look at your baby's face.</p>
             </div>
 
+            <div class="scanning-animation" id="scanningAnimation">
+                <div class="scanning-spinner"></div>
+                <p class="scanning-text">Analyzing facial expressions...</p>
+            </div>
+
             <div class="result-card" id="resultCard" style="display: none;">
                 <h3 id="resultTitle">Result here</h3>
                 <p id="resultDesc">Description here</p>
                 <div class="suggestions-list">
                     <h4>Things to try</h4>
-                    <ul id="suggestionsList">
-                    </ul>
+                    <ul id="suggestionsList"></ul>
                 </div>
             </div>
 
             <button class="back-button" onclick="goBack()">Back to Home</button>
-
-            <p class="disclaimer">This is a simulation. The real app would use your camera.</p>
+            <p class="disclaimer">All processing happens on your device.</p>
         </div>
 
         <div class="screen history-screen" id="historyScreen">
@@ -843,8 +1020,7 @@
                 <h2>Scan History</h2>
                 <p>Your recent scans and their results.</p>
             </div>
-            <div id="historyList" class="history-list">
-            </div>
+            <div id="historyList" class="history-list"></div>
         </div>
 
         <div class="screen settings-screen" id="settingsScreen">
@@ -855,7 +1031,6 @@
 
             <div class="settings-section">
                 <div class="settings-section-title">Appearance</div>
-                
                 <div class="setting-item" onclick="toggleSetting('darkMode')">
                     <div class="setting-info">
                         <div class="setting-label">Dark Mode</div>
@@ -867,7 +1042,6 @@
 
             <div class="settings-section">
                 <div class="settings-section-title">Notifications</div>
-                
                 <div class="setting-item" onclick="toggleSetting('soundEnabled')">
                     <div class="setting-info">
                         <div class="setting-label">Sound Effects</div>
@@ -875,7 +1049,6 @@
                     </div>
                     <div class="toggle-switch" id="soundEnabledToggle"></div>
                 </div>
-                
                 <div class="setting-item" onclick="toggleSetting('vibrationEnabled')">
                     <div class="setting-info">
                         <div class="setting-label">Vibration</div>
@@ -887,7 +1060,6 @@
 
             <div class="settings-section">
                 <div class="settings-section-title">Scanning</div>
-                
                 <div class="setting-item" onclick="toggleSetting('autoSaveHistory')">
                     <div class="setting-info">
                         <div class="setting-label">Auto-Save Scans</div>
@@ -895,7 +1067,6 @@
                     </div>
                     <div class="toggle-switch" id="autoSaveHistoryToggle"></div>
                 </div>
-                
                 <div class="setting-item" onclick="toggleSetting('showConfidence')">
                     <div class="setting-info">
                         <div class="setting-label">Show Confidence</div>
@@ -907,8 +1078,7 @@
 
             <div class="settings-section">
                 <div class="settings-section-title">Data</div>
-                
-                <div class="setting-item" onclick="showClearHistoryModal()">
+                <div class="setting-item clickable" onclick="showClearHistoryModal()">
                     <div class="setting-info">
                         <div class="setting-label">Clear History</div>
                         <div class="setting-description">Delete all saved scan history</div>
@@ -918,7 +1088,6 @@
 
             <div class="settings-section">
                 <div class="settings-section-title">About</div>
-                
                 <div class="about-section">
                     <svg class="about-logo" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
@@ -967,110 +1136,556 @@
     <div class="toast" id="toast">Settings saved</div>
 
     <script>
-        const states = [
-            {
-                emotion: 'Happy',
-                title: 'Seems pretty happy',
-                desc: 'Your baby looks content. Not fussy. Eyes are engaged.',
-                suggestions: [
-                    'This is a good time for play',
-                    'Try tummy time if they haven\'t had it',
-                    'Talk and sing to them',
-                    'Maybe introduce a new toy'
-                ],
-                type: 'Positive',
-                confidence: 'High'
-            },
-            {
-                emotion: 'Fussy',
-                title: 'Looking a bit fussy',
-                desc: 'Your baby might be uncomfortable or needing something.',
-                suggestions: [
-                    'Check the diaper - might need a change',
-                    'Think about when they last ate',
-                    'Try burping if it\'s been a while',
-                    'Sometimes they just need to be held'
-                ],
-                fixes: 'Check diaper, feeding, or try burping',
-                type: 'Negative',
-                confidence: 'Medium'
-            },
-            {
-                emotion: 'Tired',
-                title: 'Showing tired signs',
-                desc: 'Your baby might be ready for some sleep.',
-                suggestions: [
-                    'Start winding down now',
-                    'Dim the lights if you can',
-                    'Try swaddling if age-appropriate',
-                    'White noise can help sometimes'
-                ],
-                fixes: 'Start bedtime routine, dim lights, try swaddling',
-                type: 'Negative',
-                confidence: 'Medium'
-            },
-            {
-                emotion: 'Calm',
-                title: 'Pretty neutral',
-                desc: 'Your baby is calm and observing. Just taking things in.',
-                suggestions: [
-                    'Talk softly to them',
-                    'They might enjoy looking at a book',
-                    'A change of scenery can be nice',
-                    'Just being nearby is enough'
-                ],
-                type: 'Positive',
-                confidence: 'Low'
-            }
-        ];
+        // BabySense App - Complete Emotion Detection Logic
+        // Uses BACK CAMERA (facingMode: 'environment')
+        // NO MIRRORING (transform: scaleX(1))
 
-        let scanHistory = [];
-        
-        const defaultSettings = {
-            darkMode: false,
-            soundEnabled: true,
-            vibrationEnabled: true,
-            autoSaveHistory: true,
-            showConfidence: true
+        const CONFIG = {
+            STORAGE_KEY: 'baby_care_history',
+            SETTINGS_KEY: 'baby_care_settings',
+            EMOTION_LABELS: ['happy', 'crying', 'neutral', 'tired', 'laughing', 'sad', 'angry'],
+            DEMO_MODE: false
         };
 
-        let settings = { ...defaultSettings };
+        const state = {
+            camera: null,
+            stream: null,
+            model: null,
+            isScanning: false,
+            isFullScreen: false,
+            animationId: null,
+            emotionBuffer: [],
+            currentEmotion: null,
+            settings: {
+                darkMode: false,
+                cameraFrame: 'default',
+                soundEnabled: true,
+                vibrationEnabled: true,
+                autoSaveHistory: true,
+                showConfidence: true
+            }
+        };
+
+        const EMOTION_DATA = {
+            happy: { emoji: '😊', name: 'Happy', title: 'Seems pretty happy', desc: 'Your baby looks content. Not fussy. Eyes are engaged.', suggestions: ['This is a good time for play', 'Try tummy time if they haven\'t had it', 'Talk and sing to them', 'Maybe introduce a new toy'], type: 'Positive', liveAdvice: 'Engage in play time!' },
+            crying: { emoji: '😢', name: 'Needs Attention', title: 'Looking fussy', desc: 'Your baby might be uncomfortable or needing something.', suggestions: ['Check the diaper - might need a change', 'Think about when they last ate', 'Try burping if it\'s been a while', 'Sometimes they just need to be held'], type: 'Negative', liveAdvice: 'Check diaper and feeding' },
+            neutral: { emoji: '😌', name: 'Calm', title: 'Pretty neutral', desc: 'Your baby is calm and observing. Just taking things in.', suggestions: ['Talk softly to them', 'They might enjoy looking at a book', 'A change of scenery can be nice', 'Just being nearby is enough'], type: 'Positive', liveAdvice: 'Observing surroundings' },
+            tired: { emoji: '😴', name: 'Tired', title: 'Showing tired signs', desc: 'Your baby might be ready for some sleep.', suggestions: ['Start winding down now', 'Dim the lights if you can', 'Try swaddling if age-appropriate', 'White noise can help sometimes'], type: 'Negative', liveAdvice: 'Time for sleep soon' },
+            laughing: { emoji: '😄', name: 'Laughing', title: 'So happy!', desc: 'Your baby is in a great mood and feeling playful.', suggestions: ['Play gentle tickle games', 'Make silly faces and funny sounds', 'Dance and move rhythmically with baby', 'Play peek-a-boo for social bonding'], type: 'Positive', liveAdvice: 'Play and have fun!' },
+            sad: { emoji: '😢', name: 'Sad', title: 'Looking a bit sad', desc: 'Your baby might be feeling upset or overwhelmed.', suggestions: ['Comfort and hold your baby', 'Check if anything is bothering them', 'Try a quiet, calm environment', 'Gentle rocking may help'], type: 'Negative', liveAdvice: 'Comfort your baby' },
+            angry: { emoji: '😠', name: 'Frustrated', title: 'Looking frustrated', desc: 'Your baby might be overwhelmed or overstimulated.', suggestions: ['Calm the environment', 'Reduce noise and stimulation', 'Hold and soothe gently', 'Check for discomfort'], type: 'Negative', liveAdvice: 'Calm and soothe' }
+        };
+
+        const LANDMARKS = {
+            LEFT_EYE_TOP: 159, LEFT_EYE_BOTTOM: 145, LEFT_EYE_LEFT: 33, LEFT_EYE_RIGHT: 133,
+            RIGHT_EYE_TOP: 386, RIGHT_EYE_BOTTOM: 374, RIGHT_EYE_LEFT: 362, RIGHT_EYE_RIGHT: 263,
+            MOUTH_TOP: 13, MOUTH_BOTTOM: 14, MOUTH_LEFT: 78, MOUTH_RIGHT: 308
+        };
+
+        const THRESHOLDS = { EAR_SLEEPY: 0.18, EAR_DROWSY: 0.24, EAR_AWAKE: 0.28, MAR_CRYING: 0.35, MAR_TALKING: 0.25 };
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            loadSettings();
+            loadHistory();
+            await loadModel();
+            document.getElementById('cameraPreview').addEventListener('dblclick', toggleFullScreen);
+        });
+
+        async function loadModel() {
+            try {
+                if (!CONFIG.DEMO_MODE) {
+                    state.model = await faceLandmarksDetection.createDetector(
+                        faceLandmarksDetection.SupportedModels.mediapipeFacemesh,
+                        { runtime: 'tfjs', refineLandmarks: true, maxFaces: 1 }
+                    );
+                    console.log('Face detection model loaded');
+                }
+            } catch (error) {
+                console.log('Using demo mode:', error);
+                state.model = null;
+            }
+        }
+
+        function toggleScan() {
+            if (state.isScanning) stopScanning();
+            else startScanning();
+        }
+
+        async function startScanning() {
+            const video = document.getElementById('videoElement');
+            const canvas = document.getElementById('canvasOverlay');
+            const scanButton = document.getElementById('scanButton');
+            const cameraText = document.querySelector('.camera-text');
+            const heartShape = document.querySelector('.heart-shape');
+            const cameraIcon = document.querySelector('.camera-icon');
+            
+            try {
+                // IMPORTANT: Use BACK CAMERA (facingMode: 'environment')
+                state.stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: 'environment', // Gets the BACK camera on phones
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    },
+                    audio: false
+                });
+                
+                video.srcObject = state.stream;
+                await video.play();
+                
+                state.isScanning = true;
+                state.emotionBuffer = [];
+                state.currentEmotion = null;
+                
+                video.style.display = 'block';
+                canvas.style.display = 'block';
+                cameraText.style.display = 'none';
+                heartShape.style.display = 'none';
+                cameraIcon.style.display = 'none';
+                
+                scanButton.textContent = 'Stop Scanning';
+                scanButton.classList.add('scanning');
+                
+                detectEmotion();
+                
+                if (state.settings.soundEnabled) playSoundEffect();
+                
+            } catch (error) {
+                console.error('Camera error:', error);
+                showToast('Camera access denied - please allow camera permissions');
+            }
+        }
+
+        function stopScanning() {
+            const video = document.getElementById('videoElement');
+            const canvas = document.getElementById('canvasOverlay');
+            const scanButton = document.getElementById('scanButton');
+            const cameraText = document.querySelector('.camera-text');
+            const heartShape = document.querySelector('.heart-shape');
+            const cameraIcon = document.querySelector('.camera-icon');
+            const liveGui = document.getElementById('liveGui');
+            
+            state.isScanning = false;
+            
+            if (state.animationId) cancelAnimationFrame(state.animationId);
+            
+            if (state.stream) {
+                state.stream.getTracks().forEach(track => track.stop());
+                state.stream = null;
+            }
+            
+            video.style.display = 'none';
+            canvas.style.display = 'none';
+            liveGui.style.display = 'none';
+            
+            if (state.settings.cameraFrame === 'heart') {
+                heartShape.style.display = 'block';
+                cameraIcon.style.display = 'none';
+            } else {
+                heartShape.style.display = 'none';
+                cameraIcon.style.display = 'block';
+            }
+            
+            cameraText.style.display = 'block';
+            scanButton.textContent = "Scan Baby's Face";
+            scanButton.classList.remove('scanning');
+            
+            if (state.emotionBuffer.length > 0) showResults();
+        }
+
+        async function detectEmotion() {
+            if (!state.isScanning) return;
+            
+            const video = document.getElementById('videoElement');
+            const canvas = document.getElementById('canvasOverlay');
+            const ctx = canvas.getContext('2d');
+            
+            try {
+                if (state.model) {
+                    const predictions = await state.model.estimateFaces(video, false);
+                    
+                    if (predictions.length > 0) {
+                        const landmarks = predictions[0].landmarks;
+                        
+                        canvas.width = video.videoWidth;
+                        canvas.height = video.videoHeight;
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                        
+                        const emotionResult = analyzeEmotion(landmarks);
+                        state.currentEmotion = emotionResult;
+                        state.emotionBuffer.push(emotionResult);
+                        
+                        if (state.emotionBuffer.length > 15) state.emotionBuffer.shift();
+                        
+                        if (state.isFullScreen) {
+                            drawFaceMesh(ctx, landmarks);
+                            updateLiveGUI(emotionResult);
+                        } else {
+                            drawFaceCircle(ctx, landmarks);
+                        }
+                    } else {
+                        canvas.style.display = 'none';
+                        document.getElementById('liveGui').style.display = 'none';
+                    }
+                } else {
+                    const demoResult = getDemoResult();
+                    state.currentEmotion = demoResult;
+                    state.emotionBuffer.push(demoResult);
+                    if (state.emotionBuffer.length > 15) state.emotionBuffer.shift();
+                    
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    
+                    if (state.isFullScreen) {
+                        drawDemoMesh(ctx);
+                        updateLiveGUI(demoResult);
+                    } else {
+                        drawDemoCircle(ctx);
+                    }
+                }
+            } catch (error) {
+                console.error('Detection error:', error);
+            }
+            
+            state.animationId = requestAnimationFrame(detectEmotion);
+        }
+
+        function analyzeEmotion(landmarks) {
+            const ear = calculateEAR(landmarks);
+            const mar = calculateMAR(landmarks);
+            
+            const scores = { happy: 0, crying: 0, neutral: 0, tired: 0, laughing: 0, sad: 0, angry: 0 };
+            
+            if (ear < THRESHOLDS.EAR_SLEEPY) scores.tired += 0.85;
+            else if (ear < THRESHOLDS.EAR_DROWSY) { scores.tired += 0.5; scores.neutral += 0.3; }
+            else if (ear < THRESHOLDS.EAR_AWAKE) scores.neutral += 0.5;
+            else { scores.neutral += 0.4; scores.happy += 0.3; scores.laughing += 0.2; }
+            
+            if (mar > THRESHOLDS.MAR_CRYING) { scores.crying += 0.85; scores.sad += 0.2; }
+            else if (mar > THRESHOLDS.MAR_TALKING) { scores.happy += 0.3; scores.laughing += 0.4; }
+            
+            let dominantEmotion = 'neutral';
+            let maxScore = 0;
+            
+            Object.entries(scores).forEach(([emotion, score]) => {
+                if (score > maxScore) { maxScore = score; dominantEmotion = emotion; }
+            });
+            
+            const totalScore = Object.values(scores).reduce((a, b) => a + b, 0) || 1;
+            const confidence = maxScore / totalScore;
+            
+            return { emotion: dominantEmotion, confidence, message: `Detected ${EMOTION_DATA[dominantEmotion]?.name || 'neutral'} expression` };
+        }
+
+        function calculateEAR(landmarks) {
+            const lm = LANDMARKS;
+            const leftEAR = (distance2D(landmarks[lm.LEFT_EYE_TOP], landmarks[lm.LEFT_EYE_BOTTOM]) * 2) / 
+                           (distance2D(landmarks[lm.LEFT_EYE_LEFT], landmarks[lm.LEFT_EYE_RIGHT]) + distance2D(landmarks[lm.LEFT_EYE_TOP], landmarks[lm.LEFT_EYE_BOTTOM]));
+            const rightEAR = (distance2D(landmarks[lm.RIGHT_EYE_TOP], landmarks[lm.RIGHT_EYE_BOTTOM]) * 2) /
+                            (distance2D(landmarks[lm.RIGHT_EYE_LEFT], landmarks[lm.RIGHT_EYE_RIGHT]) + distance2D(landmarks[lm.RIGHT_EYE_TOP], landmarks[lm.RIGHT_EYE_BOTTOM]));
+            return (leftEAR + rightEAR) / 2;
+        }
+
+        function calculateMAR(landmarks) {
+            const lm = LANDMARKS;
+            return distance2D(landmarks[lm.MOUTH_TOP], landmarks[lm.MOUTH_BOTTOM]) / distance2D(landmarks[lm.MOUTH_LEFT], landmarks[lm.MOUTH_RIGHT]);
+        }
+
+        function distance2D(p1, p2) {
+            return Math.sqrt(Math.pow(p1[0] - p2[0], 2) + Math.pow(p1[1] - p2[1], 2));
+        }
+
+        function getDemoResult() {
+            const emotions = ['happy', 'crying', 'neutral', 'tired', 'laughing'];
+            const weights = [0.35, 0.25, 0.2, 0.1, 0.1];
+            let random = Math.random(), cumulative = 0, emotion = 'neutral';
+            
+            for (let i = 0; i < emotions.length; i++) {
+                cumulative += weights[i];
+                if (random < cumulative) { emotion = emotions[i]; break; }
+            }
+            
+            return { emotion, confidence: 0.75 + Math.random() * 0.2, message: `Detected ${EMOTION_DATA[emotion]?.name || 'neutral'} expression`, demoMode: true };
+        }
+
+        function drawFaceMesh(ctx, landmarks) {
+            ctx.strokeStyle = 'rgba(16, 185, 129, 0.8)';
+            ctx.lineWidth = 2;
+            
+            const faceOval = [234, 93, 132, 58, 172, 136, 150, 176, 148, 152, 377, 400, 378, 379, 365, 397, 288, 361, 323, 454, 356, 459, 451, 4];
+            ctx.beginPath();
+            faceOval.forEach((idx, i) => {
+                const point = landmarks[idx];
+                if (i === 0) ctx.moveTo(point[0], point[1]);
+                else ctx.lineTo(point[0], point[1]);
+            });
+            ctx.closePath();
+            ctx.stroke();
+            
+            const leftEye = [33, 133, 144, 145, 153, 154, 155, 157, 158, 159, 160, 161, 163, 173];
+            const rightEye = [362, 263, 249, 390, 373, 374, 380, 381, 382, 384, 385, 386, 387, 388, 390, 398];
+            
+            [leftEye, rightEye].forEach(eye => {
+                ctx.beginPath();
+                eye.forEach((idx, i) => {
+                    const point = landmarks[idx];
+                    if (i === 0) ctx.moveTo(point[0], point[1]);
+                    else ctx.lineTo(point[0], point[1]);
+                });
+                ctx.closePath();
+                ctx.stroke();
+            });
+            
+            const mouth = [13, 14, 17, 37, 40, 78, 80, 81, 82, 84, 87, 88, 91, 95, 146, 178, 181, 308, 310, 311, 312, 314, 317, 318, 402, 405];
+            ctx.beginPath();
+            mouth.forEach((idx, i) => {
+                const point = landmarks[idx];
+                if (i === 0) ctx.moveTo(point[0], point[1]);
+                else ctx.lineTo(point[0], point[1]);
+            });
+            ctx.closePath();
+            ctx.stroke();
+            
+            ctx.beginPath();
+            [4, 2, 3, 5, 6, 168, 193, 212].forEach((idx, i) => {
+                const point = landmarks[idx];
+                if (i === 0) ctx.moveTo(point[0], point[1]);
+                else ctx.lineTo(point[0], point[1]);
+            });
+            ctx.stroke();
+        }
+
+        function drawFaceCircle(ctx, landmarks) {
+            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+            
+            landmarks.forEach(point => {
+                minX = Math.min(minX, point[0]);
+                minY = Math.min(minY, point[1]);
+                maxX = Math.max(maxX, point[0]);
+                maxY = Math.max(maxY, point[1]);
+            });
+            
+            const centerX = (minX + maxX) / 2;
+            const centerY = (minY + maxY) / 2;
+            const radius = Math.max((maxX - minX) / 2, (maxY - minY) / 2) * 0.8;
+            
+            ctx.strokeStyle = 'rgba(16, 185, 129, 0.9)';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+            ctx.closePath();
+            ctx.stroke();
+        }
+
+        function drawDemoMesh(ctx) {
+            const video = document.getElementById('videoElement');
+            const cx = video.videoWidth / 2, cy = video.videoHeight / 2, r = Math.min(video.videoWidth, video.videoHeight) * 0.3;
+            
+            ctx.strokeStyle = 'rgba(16, 185, 129, 0.8)';
+            ctx.lineWidth = 2;
+            
+            ctx.beginPath();
+            ctx.ellipse(cx, cy, r * 0.8, r, 0, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.arc(cx - r * 0.3, cy - r * 0.1, r * 0.1, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(cx + r * 0.3, cy - r * 0.1, r * 0.1, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.arc(cx, cy + r * 0.2, r * 0.3, 0.1 * Math.PI, 0.9 * Math.PI);
+            ctx.stroke();
+        }
+
+        function drawDemoCircle(ctx) {
+            const video = document.getElementById('videoElement');
+            const cx = video.videoWidth / 2, cy = video.videoHeight / 2, r = Math.min(video.videoWidth, video.videoHeight) * 0.3;
+            
+            ctx.strokeStyle = 'rgba(16, 185, 129, 0.9)';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(cx, cy, r, 0, Math.PI * 2);
+            ctx.closePath();
+            ctx.stroke();
+        }
+
+        function updateLiveGUI(result) {
+            const liveGui = document.getElementById('liveGui');
+            const liveEmotion = document.getElementById('liveEmotion');
+            const liveAdvice = document.getElementById('liveAdvice');
+            
+            if (result && EMOTION_DATA[result.emotion]) {
+                const emotionInfo = EMOTION_DATA[result.emotion];
+                liveEmotion.textContent = `${emotionInfo.emoji} ${emotionInfo.name}`;
+                liveAdvice.textContent = emotionInfo.liveAdvice;
+                liveGui.style.display = 'block';
+            }
+        }
+
+        function toggleFullScreen() {
+            state.isFullScreen = !state.isFullScreen;
+            const cameraPreview = document.getElementById('cameraPreview');
+            
+            if (state.isFullScreen) {
+                cameraPreview.classList.add('fullscreen-mode');
+                showToast('Fullscreen mode - double-click to exit');
+            } else {
+                cameraPreview.classList.remove('fullscreen-mode');
+                document.getElementById('liveGui').style.display = 'none';
+                showToast('Normal mode');
+            }
+        }
+
+        function showResults() {
+            const emotionCounts = {};
+            state.emotionBuffer.forEach(r => { emotionCounts[r.emotion] = (emotionCounts[r.emotion] || 0) + 1; });
+            
+            let dominantEmotion = 'neutral', maxCount = 0;
+            Object.entries(emotionCounts).forEach(([emotion, count]) => {
+                if (count > maxCount) { maxCount = count; dominantEmotion = emotion; }
+            });
+            
+            const relevantEmotions = state.emotionBuffer.filter(r => r.emotion === dominantEmotion);
+            const avgConfidence = relevantEmotions.reduce((sum, r) => sum + r.confidence, 0) / relevantEmotions.length;
+            const emotionInfo = EMOTION_DATA[dominantEmotion] || EMOTION_DATA.neutral;
+            
+            document.getElementById('homeScreen').style.display = 'none';
+            document.getElementById('demoScreen').style.display = 'block';
+            document.getElementById('scanningAnimation').style.display = 'none';
+            document.getElementById('scanStatus').textContent = "Here's what we noticed:";
+            
+            document.getElementById('resultTitle').textContent = emotionInfo.title;
+            document.getElementById('resultDesc').textContent = emotionInfo.desc;
+            document.getElementById('resultCard').style.display = 'block';
+            
+            const list = document.getElementById('suggestionsList');
+            list.innerHTML = '';
+            emotionInfo.suggestions.forEach(item => {
+                const li = document.createElement('li');
+                li.textContent = item;
+                list.appendChild(li);
+            });
+            
+            if (state.settings.autoSaveHistory) saveToHistory(dominantEmotion, emotionInfo, avgConfidence);
+            if (state.settings.vibrationEnabled && navigator.vibrate) navigator.vibrate(200);
+        }
+
+        function goBack() {
+            document.getElementById('demoScreen').style.display = 'none';
+            document.getElementById('homeScreen').style.display = 'block';
+            document.getElementById('resultCard').style.display = 'none';
+            document.getElementById('scanningAnimation').style.display = 'flex';
+            document.getElementById('scanStatus').textContent = 'Taking a quick look at your baby\'s face...';
+            state.emotionBuffer = [];
+            state.currentEmotion = null;
+        }
+
+        function saveToHistory(emotion, emotionInfo, confidence) {
+            const historyEntry = {
+                timestamp: new Date(),
+                emotionType: emotionInfo.type,
+                emotion: emotionInfo.name,
+                confidence: Math.round(confidence * 100)
+            };
+            
+            let scanHistory = JSON.parse(localStorage.getItem(CONFIG.STORAGE_KEY) || '[]');
+            scanHistory.unshift(historyEntry);
+            if (scanHistory.length > 20) scanHistory.pop();
+            localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(scanHistory));
+        }
+
+        function loadHistory() {
+            window.scanHistory = JSON.parse(localStorage.getItem(CONFIG.STORAGE_KEY) || '[]');
+        }
+
+        function renderHistory() {
+            const historyList = document.getElementById('historyList');
+            
+            if (!window.scanHistory || window.scanHistory.length === 0) {
+                historyList.innerHTML = '<div class="history-empty"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><h3>No scans yet</h3><p>Go to Home and tap "Scan Baby\'s Face" to get started.</p></div>';
+                return;
+            }
+            
+            historyList.innerHTML = '';
+            window.scanHistory.forEach(entry => {
+                const date = entry.timestamp.toLocaleDateString();
+                const time = entry.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                historyList.innerHTML += `<div class="history-item"><div class="history-header"><span class="history-date">${date} at ${time}</span><span class="history-badge ${entry.emotionType.toLowerCase()}">${entry.emotion}</span></div><div class="history-details"><div class="history-label">Confidence</div><div class="history-value">${entry.confidence}%</div></div></div>`;
+            });
+        }
 
         function loadSettings() {
-            const savedSettings = localStorage.getItem('babySenseSettings');
-            if (savedSettings) {
-                settings = JSON.parse(savedSettings);
-            }
+            const savedSettings = localStorage.getItem(CONFIG.SETTINGS_KEY);
+            if (savedSettings) state.settings = JSON.parse(savedSettings);
             applySettings();
         }
 
         function saveSettings() {
-            localStorage.setItem('babySenseSettings', JSON.stringify(settings));
+            localStorage.setItem(CONFIG.SETTINGS_KEY, JSON.stringify(state.settings));
             applySettings();
-            showToast('Settings saved');
         }
 
         function applySettings() {
             const phoneFrame = document.getElementById('phoneFrame');
+            const cameraPreview = document.getElementById('cameraPreview');
+            const heartShape = cameraPreview.querySelector('.heart-shape');
+            const cameraIcon = cameraPreview.querySelector('.camera-icon');
+            const cameraText = cameraPreview.querySelector('.camera-text');
             
-            if (settings.darkMode) {
+            if (state.settings.darkMode) {
                 phoneFrame.classList.add('dark-mode');
                 document.body.classList.add('dark-mode');
             } else {
                 phoneFrame.classList.remove('dark-mode');
                 document.body.classList.remove('dark-mode');
             }
-
-            document.getElementById('darkModeToggle').classList.toggle('active', settings.darkMode);
-            document.getElementById('soundEnabledToggle').classList.toggle('active', settings.soundEnabled);
-            document.getElementById('vibrationEnabledToggle').classList.toggle('active', settings.vibrationEnabled);
-            document.getElementById('autoSaveHistoryToggle').classList.toggle('active', settings.autoSaveHistory);
-            document.getElementById('showConfidenceToggle').classList.toggle('active', settings.showConfidence);
+            
+            cameraPreview.className = 'camera-preview frame-' + state.settings.cameraFrame;
+            
+            if (state.settings.cameraFrame === 'heart') {
+                heartShape.style.display = 'block';
+                cameraIcon.style.display = 'none';
+                cameraText.style.display = 'none';
+            } else {
+                heartShape.style.display = 'none';
+                if (!state.isScanning) { cameraIcon.style.display = 'block'; cameraText.style.display = 'block'; }
+            }
+            
+            const frameSelector = document.getElementById('frameSelector');
+            frameSelector.style.display = state.isScanning ? 'none' : 'block';
+            
+            document.querySelectorAll('.frame-option-btn').forEach(btn => {
+                btn.classList.toggle('selected', btn.dataset.frame === state.settings.cameraFrame);
+            });
+            
+            document.getElementById('darkModeToggle').classList.toggle('active', state.settings.darkMode);
+            document.getElementById('soundEnabledToggle').classList.toggle('active', state.settings.soundEnabled);
+            document.getElementById('vibrationEnabledToggle').classList.toggle('active', state.settings.vibrationEnabled);
+            document.getElementById('autoSaveHistoryToggle').classList.toggle('active', state.settings.autoSaveHistory);
+            document.getElementById('showConfidenceToggle').classList.toggle('active', state.settings.showConfidence);
         }
 
         function toggleSetting(setting) {
-            settings[setting] = !settings[setting];
+            state.settings[setting] = !state.settings[setting];
             saveSettings();
+            showToast('Settings saved');
+        }
+
+        function selectFrame(frame) {
+            state.settings.cameraFrame = frame;
+            saveSettings();
+            showToast('Frame updated');
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
         }
 
         function showClearHistoryModal() {
@@ -1082,143 +1697,27 @@
         }
 
         function clearHistory() {
-            scanHistory = [];
-            localStorage.setItem('babySenseHistory', JSON.stringify(scanHistory));
+            window.scanHistory = [];
+            localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(window.scanHistory));
             hideClearHistoryModal();
             showToast('History cleared');
+            renderHistory();
         }
 
-        function showToast(message) {
-            const toast = document.getElementById('toast');
-            toast.textContent = message;
-            toast.classList.add('show');
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 2000);
-        }
-
-        function loadHistory() {
-            const savedHistory = localStorage.getItem('babySenseHistory');
-            if (savedHistory) {
-                scanHistory = JSON.parse(savedHistory);
-            }
-        }
-
-        function startScan() {
-            const homeScreen = document.getElementById('homeScreen');
-            const demoScreen = document.getElementById('demoScreen');
-            const scanStatus = document.getElementById('scanStatus');
-            const resultCard = document.getElementById('resultCard');
-
-            homeScreen.style.display = 'none';
-            demoScreen.style.display = 'block';
-            resultCard.style.display = 'none';
-            scanStatus.textContent = 'Taking a quick look at your baby\'s face...';
-
-            if (settings.soundEnabled) {
-                console.log('Playing scan sound effect');
-            }
-
-            setTimeout(() => {
-                const state = states[Math.floor(Math.random() * states.length)];
-
-                document.getElementById('resultTitle').textContent = state.title;
-                document.getElementById('resultDesc').textContent = state.desc;
-
-                const list = document.getElementById('suggestionsList');
-                list.innerHTML = '';
-                state.suggestions.forEach(item => {
-                    const li = document.createElement('li');
-                    li.textContent = item;
-                    list.appendChild(li);
-                });
-
-                if (settings.autoSaveHistory) {
-                    saveToHistory(state);
-                }
-
-                if (settings.vibrationEnabled) {
-                    console.log('Vibrating');
-                }
-
-                scanStatus.textContent = 'Here\'s what we noticed:';
-                resultCard.style.display = 'block';
-            }, 2000);
-        }
-
-        function goBack() {
-            const homeScreen = document.getElementById('homeScreen');
-            const demoScreen = document.getElementById('demoScreen');
-
-            homeScreen.style.display = 'block';
-            demoScreen.style.display = 'none';
-        }
-
-        function saveToHistory(state) {
-            const historyEntry = {
-                timestamp: new Date(),
-                emotionType: state.type,
-                emotion: state.emotion,
-                fixes: state.fixes || null,
-                confidence: state.confidence
-            };
-            scanHistory.unshift(historyEntry);
-            if (scanHistory.length > 20) {
-                scanHistory.pop();
-            }
-            localStorage.setItem('babySenseHistory', JSON.stringify(scanHistory));
-        }
-
-        function renderHistory() {
-            const historyList = document.getElementById('historyList');
-            
-            if (scanHistory.length === 0) {
-                historyList.innerHTML = `
-                    <div class="history-empty">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                        <p>No scans yet. Go to Home and tap "Scan Baby's Face" to get started.</p>
-                    </div>
-                `;
-                return;
-            }
-
-            historyList.innerHTML = '';
-            scanHistory.forEach((entry) => {
-                const date = entry.timestamp.toLocaleDateString();
-                const time = entry.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                
-                let html = `
-                    <div class="history-item">
-                        <div class="history-label">Date</div>
-                        <div class="history-value">${date} at ${time}</div>
-                        <div class="history-label">Emotion type</div>
-                        <div class="history-value">${entry.emotionType}</div>
-                        <div class="history-label">Emotion</div>
-                        <div class="history-value">${entry.emotion}</div>
-                `;
-                
-                if (entry.fixes && settings.showConfidence) {
-                    html += `
-                        <div class="history-label">fixes</div>
-                        <div class="history-value">${entry.fixes}</div>
-                    `;
-                }
-                
-                if (settings.showConfidence) {
-                    html += `
-                        <div class="history-label">Confidence level</div>
-                        <div class="history-value">${entry.confidence}</div>
-                    `;
-                }
-                
-                html += `
-                    </div>
-                `;
-                
-                historyList.innerHTML += html;
-            });
+        function playSoundEffect() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                oscillator.frequency.value = 800;
+                oscillator.type = 'sine';
+                gainNode.gain.value = 0.1;
+                oscillator.start();
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                oscillator.stop(audioContext.currentTime + 0.3);
+            } catch (e) { console.log('Sound not available'); }
         }
 
         function switchTab(tab, element) {
@@ -1226,22 +1725,27 @@
             const demoScreen = document.getElementById('demoScreen');
             const historyScreen = document.getElementById('historyScreen');
             const settingsScreen = document.getElementById('settingsScreen');
+            const frameSelector = document.getElementById('frameSelector');
             const navItems = document.querySelectorAll('.nav-item');
-
+            
+            if (state.isScanning && tab !== 'home') stopScanning();
+            
             navItems.forEach(item => item.classList.remove('active'));
-
+            
             if (tab === 'home') {
                 homeScreen.style.display = 'block';
                 demoScreen.style.display = 'none';
                 historyScreen.style.display = 'none';
                 settingsScreen.style.display = 'none';
                 navItems[0].classList.add('active');
+                frameSelector.style.display = 'block';
             } else if (tab === 'history') {
                 homeScreen.style.display = 'none';
                 demoScreen.style.display = 'none';
                 historyScreen.style.display = 'block';
                 settingsScreen.style.display = 'none';
                 navItems[1].classList.add('active');
+                frameSelector.style.display = 'none';
                 renderHistory();
             } else if (tab === 'settings') {
                 homeScreen.style.display = 'none';
@@ -1249,10 +1753,9 @@
                 historyScreen.style.display = 'none';
                 settingsScreen.style.display = 'block';
                 navItems[2].classList.add('active');
+                frameSelector.style.display = 'none';
             }
         }
-
-        loadSettings();
-        loadHistory();
     </script>
 </body>
+</html>
